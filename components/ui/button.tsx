@@ -1,0 +1,43 @@
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        primary:
+          "bg-white/15 text-white shadow-glow hover:bg-white/20 active:scale-[0.99]",
+        ghost:
+          "bg-transparent text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.99]",
+      },
+      size: {
+        md: "h-11 px-5",
+        lg: "h-12 px-6 text-[15px]",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "lg",
+    },
+  }
+);
+
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants>;
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(buttonVariants({ variant, size }), className)}
+        {...props}
+      />
+    );
+  }
+);
+
+Button.displayName = "Button";
+

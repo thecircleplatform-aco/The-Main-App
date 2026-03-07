@@ -1,0 +1,14 @@
+@layer utilities {
+  .glass {
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(24px);
+  }
+
+  .glass-strong {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(30px);
+  }
+}
+
