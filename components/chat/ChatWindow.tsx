@@ -5,38 +5,46 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Loader2, Brain, X, Menu, Settings, FileText, Shield, Sparkles, User, LogIn, UserPlus, LogOut } from "lucide-react";
 import { AccountRecoveryView } from "@/components/account/AccountRecoveryView";
-import type { DiscussionResult, EngineMessage } from "@/services/aiEngine";
+import type { EngineMessage } from "@/services/aiEngine";
 import { MessageBubble } from "./MessageBubble";
-import { AgentMessage } from "./AgentMessage";
 import { MessageInput } from "./MessageInput";
+import { StreamingMessage } from "./StreamingMessage";
+import { MessageActions } from "./MessageActions";
 import { cn } from "@/lib/utils";
 import { fadeInUp } from "@/lib/animations";
 import { CREW } from "@/lib/crew";
 
 type ChatMessage = EngineMessage;
 
-const STORAGE_KEY = "circle.chat.history.v1";
+const STORAGE_KEY_PREFIX = "circle.chat.history.v1";
 
 type Status = "idle" | "sending" | "thinking";
 
-function loadInitialMessages(): ChatMessage[] {
-  if (typeof window === "undefined") return [];
+function getStorageKey(userId: string | null): string | null {
+  if (!userId) return null;
+  return `${STORAGE_KEY_PREFIX}.${userId}`;
+}
+
+function loadInitialMessages(userId: string | null): ChatMessage[] {
+  if (typeof window === "undefined" || !userId) return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const key = getStorageKey(userId);
+    if (!key) return [];
+    const raw = window.localStorage.getItem(key);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Only show user-facing messages; internal council messages stay server-side
     return parsed.filter((m: ChatMessage) => !m.internal);
   } catch {
     return [];
   }
 }
 
-function persistMessages(messages: ChatMessage[]) {
-  if (typeof window === "undefined") return;
+function persistMessages(messages: ChatMessage[], userId: string | null) {
+  if (typeof window === "undefined" || !userId) return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    const key = getStorageKey(userId);
+    if (key) window.localStorage.setItem(key, JSON.stringify(messages));
   } catch {
     // ignore
   }
@@ -49,7 +57,12 @@ export function ChatWindow() {
   const [internalMessages, setInternalMessages] = React.useState<EngineMessage[]>([]);
   const [showInternalPanel, setShowInternalPanel] = React.useState(false);
   const [showSideMenu, setShowSideMenu] = React.useState(false);
+  /** Per-message feedback: messageId -> "helpful" | "not_helpful" */
+  const [feedbackByMessage, setFeedbackByMessage] = React.useState<Record<string, "helpful" | "not_helpful">>({});
+  /** Current stream mode: chat (fast) or reasoning */
+  const [streamingMode, setStreamingMode] = React.useState<"chat" | "reasoning" | null>(null);
   const [me, setMe] = React.useState<{
+    id: string | null;
     email: string | null;
     name?: string;
     deletionScheduledAt?: string | null;
@@ -57,33 +70,36 @@ export function ChatWindow() {
 
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const internalScrollRef = React.useRef<HTMLDivElement | null>(null);
+  const isSendingRef = React.useRef(false);
 
   React.useEffect(() => {
-    setMessages(loadInitialMessages());
-  }, []);
+    if (me?.id) {
+      setMessages(loadInitialMessages(me.id));
+    }
+  }, [me?.id]);
 
   // Must be signed in to use chat; redirect to login if not
   React.useEffect(() => {
     fetch("/api/me")
-      .then((r) => (r.ok ? r.json() : { email: null, name: null, deletionScheduledAt: null }))
+      .then((r) => (r.ok ? r.json() : { id: null, email: null, name: null, deletionScheduledAt: null }))
       .then((data) => {
-        setMe(data);
+        setMe({ ...data, id: data.id ?? null });
         if (data.email == null) {
           const from = typeof window !== "undefined" ? window.location.pathname || "/" : "/";
           window.location.href = "/login?from=" + encodeURIComponent(from);
         }
       })
       .catch(() => {
-        setMe({ email: null, deletionScheduledAt: null });
+        setMe({ id: null, email: null, deletionScheduledAt: null });
         window.location.href = "/login";
       });
   }, []);
 
   React.useEffect(() => {
-    if (messages.length) {
-      persistMessages(messages);
+    if (messages.length && me?.id) {
+      persistMessages(messages, me.id);
     }
-  }, [messages]);
+  }, [messages, me?.id]);
 
   React.useEffect(() => {
     const el = scrollRef.current;
@@ -105,25 +121,14 @@ export function ChatWindow() {
     fetch("/api/me")
       .then((r) => (r.ok ? r.json() : { email: null, name: null, deletionScheduledAt: null }))
       .then((data) => setMe(data))
-      .catch(() => setMe({ email: null, deletionScheduledAt: null }));
+      .catch(() => { /* keep previous me on refetch failure */ });
   }, [showSideMenu]);
 
-  async function revealSequentially(
-    base: ChatMessage[],
-    incoming: ChatMessage[]
-  ) {
-    setStatus("thinking");
-    let current = [...base];
-    for (const msg of incoming) {
-      await new Promise((resolve) => setTimeout(resolve, 80));
-      current = [...current, msg];
-      setMessages(current);
-    }
-    setStatus("idle");
-  }
-
-  async function handleSend(userText: string) {
+  async function handleSend(userText: string, overrideHistory?: ChatMessage[]) {
+    if (isSendingRef.current) return;
+    isSendingRef.current = true;
     setError(null);
+    setStreamingMode(null);
     const userMessage: ChatMessage = {
       id: `user_${Date.now()}`,
       role: "user",
@@ -131,24 +136,25 @@ export function ChatWindow() {
       createdAt: new Date().toISOString(),
     };
 
-    const history = [...messages, userMessage];
+    const historyForApi = overrideHistory ?? messages;
+    const history = [...historyForApi, userMessage];
     setMessages(history);
     setStatus("sending");
 
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const controller =
       typeof AbortController !== "undefined" ? new AbortController() : null;
-    if (typeof window !== "undefined" && controller) {
-      timeoutId = setTimeout(() => controller.abort(), 55_000);
-    }
+    const timeoutId =
+      typeof window !== "undefined" && controller
+        ? setTimeout(() => controller.abort(), 55_000)
+        : undefined;
 
     try {
-      const res = await fetch("/api/ai-discussion", {
+      const res = await fetch("/api/ai-discussion/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userMessage: userText,
-          history: messages,
+          history: historyForApi,
         }),
         ...(controller ? { signal: controller.signal } : {}),
       });
@@ -162,30 +168,104 @@ export function ChatWindow() {
           const j = JSON.parse(text);
           if (j?.error) errMessage = j.error;
         } catch {
-          // use errMessage as is
+          /* use errMessage as is */
         }
         throw new Error(errMessage);
       }
 
-      const data = (await res.json()) as DiscussionResult;
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
 
-      const knownIds = new Set(history.map((m) => m.id));
-      const incoming = (data.messages ?? []).filter(
-        (m) =>
-          !knownIds.has(m.id) && m.role !== "user" && !m.internal
-      );
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let currentContent = "";
+      let streamingAgent: string | null = null;
+      let streamingMessageId: string | null = null;
 
-      if (data.messages?.length) {
-        const internal = data.messages.filter((m) => m.internal);
-        setInternalMessages(internal);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.startsWith("event: ")) {
+            const eventType = line.slice(7).trim();
+            let dataLine: string | undefined;
+            for (let j = i + 1; j < lines.length; j++) {
+              if (lines[j].startsWith("data: ")) {
+                dataLine = lines[j];
+                break;
+              }
+              if (lines[j].trim() !== "") break;
+            }
+            if (!dataLine?.startsWith("data: ")) continue;
+            const data = (() => {
+              try {
+                return JSON.parse(dataLine.slice(6));
+              } catch {
+                return null;
+              }
+            })();
+
+            if (eventType === "intro" && data?.messages) {
+              setMessages((prev) => [...prev, ...data.messages]);
+              setStatus("idle");
+              setStreamingMode(null);
+              return;
+            }
+            if (eventType === "started" && data?.situation) {
+              setStreamingMode(data.situation === "reasoning" ? "reasoning" : "chat");
+            }
+            if (eventType === "content" && typeof data?.chunk === "string") {
+              currentContent += data.chunk;
+              if (!streamingMessageId) {
+                streamingMessageId = `msg_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+                streamingAgent = "Lumana";
+              }
+              setMessages((prev) => {
+                const without = prev.filter((m) => m.id !== streamingMessageId);
+                return [
+                  ...without,
+                  {
+                    id: streamingMessageId!,
+                    role: "agent" as const,
+                    content: currentContent,
+                    agentName: streamingAgent ?? "Circle",
+                    createdAt: new Date().toISOString(),
+                  },
+                ];
+              });
+            }
+            if (eventType === "done" && data) {
+              streamingAgent = data.agent ?? streamingAgent ?? "Lumana";
+              setStreamingMode(null);
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamingMessageId
+                    ? { ...m, agentName: streamingAgent ?? m.agentName }
+                    : m
+                )
+              );
+              setStatus("idle");
+            }
+            if (eventType === "error" && data?.error) {
+              setError(data.error);
+              setStatus("idle");
+              setStreamingMode(null);
+              return;
+            }
+          }
+        }
       }
 
-      if (!incoming.length) {
-        return;
-      }
-
-      await revealSequentially(history, incoming);
+      setStatus("idle");
+      setStreamingMode(null);
     } catch (e) {
+      if (timeoutId != null) clearTimeout(timeoutId);
       if (e instanceof Error) {
         if (e.name === "AbortError") {
           setError("Request timed out. Check your connection and try again.");
@@ -195,10 +275,46 @@ export function ChatWindow() {
       } else {
         setError("Something went wrong");
       }
-    } finally {
-      if (timeoutId != null) clearTimeout(timeoutId);
       setStatus("idle");
+      setStreamingMode(null);
+    } finally {
+      isSendingRef.current = false;
     }
+  }
+
+  function handleFeedback(messageId: string, type: "helpful" | "not_helpful") {
+    setFeedbackByMessage((prev) => ({ ...prev, [messageId]: type }));
+    fetch("/api/message-feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messageId, feedbackType: type }),
+    }).catch(() => {});
+  }
+
+  function handleHideMessage(messageId: string) {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }
+
+  function handleDeleteLatestUserMessage(messageId: string) {
+    const idx = messages.findIndex((m) => m.id === messageId);
+    if (idx < 0) return;
+    const next = messages[idx + 1];
+    const idsToRemove = new Set([messageId]);
+    if (next?.role === "agent") idsToRemove.add(next.id);
+    setMessages((prev) => prev.filter((m) => !idsToRemove.has(m.id)));
+  }
+
+  function handleCopyUserMessage(content: string) {
+    if (typeof navigator?.clipboard?.writeText === "function") {
+      navigator.clipboard.writeText(content);
+    }
+  }
+
+  function handleEditUserMessage(messageId: string, editedContent: string) {
+    const idx = messages.findIndex((m) => m.id === messageId);
+    if (idx < 0) return;
+    const historyBeforeEdit = messages.slice(0, idx);
+    void handleSend(editedContent, historyBeforeEdit);
   }
 
   const isBusy = status === "sending" || status === "thinking";
@@ -211,44 +327,48 @@ export function ChatWindow() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-black/95">
       {/* Fixed header */}
-      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-black/80 px-3 py-2 backdrop-blur-xl sm:px-4 sm:py-3">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/[0.08] bg-black/90 px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-3">
         <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={() => setShowSideMenu(true)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-black/80"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/15 focus:ring-offset-2 focus:ring-offset-black/90"
             aria-label="Open menu"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" strokeWidth={1.75} />
           </button>
           <div className="min-w-0">
           <button
             type="button"
             onClick={() => setShowInternalPanel((v) => !v)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-2.5 py-1 text-[10px] font-medium text-white/70 transition-colors sm:px-3 sm:py-1 sm:text-[11px]",
-              "hover:bg-white/10 hover:border-white/20 hover:text-white/90",
-              "focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-black/80"
+              "inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-white/60 transition-colors sm:px-3 sm:py-1 sm:text-[11px]",
+              "hover:bg-white/8 hover:text-white/80",
+              "focus:outline-none focus:ring-2 focus:ring-white/15 focus:ring-offset-2 focus:ring-offset-black/90"
             )}
             aria-expanded={showInternalPanel}
             aria-label={showInternalPanel ? "Hide agent group discussion" : "Show how AI agents think and plan as a group"}
           >
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-            <span className="truncate">Live multi-agent chat</span>
+            <span className="truncate">Crew chat</span>
           </button>
           <h2 className="mt-1.5 truncate text-xs font-semibold text-white/90 sm:mt-2 sm:text-sm">
-            Council discussion
+            Personal AI Crew
           </h2>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-[10px] text-white/45 sm:text-[11px]">
+        <div className="flex shrink-0 items-center gap-2 text-[11px] text-white/50 sm:text-xs">
           {isBusy ? (
             <>
-              <Loader2 className="h-3 w-3 animate-spin" />
-              <span className="hidden sm:inline">Council is thinking…</span>
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" strokeWidth={2} />
+              {streamingMode ? (
+                <span className="truncate font-medium text-white/70">
+                  {streamingMode === "reasoning" ? "Reasoning…" : "Replying…"}
+                </span>
+              ) : null}
             </>
           ) : (
-            <span>Ready</span>
+            <span className="text-white/60">Ready</span>
           )}
         </div>
       </header>
@@ -368,7 +488,7 @@ export function ChatWindow() {
                       type="button"
                       onClick={async () => {
                         await fetch("/api/auth/logout", { method: "POST" });
-                        setMe({ email: null });
+                        setMe({ id: null, email: null });
                         setShowSideMenu(false);
                         window.location.reload();
                       }}
@@ -496,7 +616,7 @@ export function ChatWindow() {
       {/* Full-screen scrollable content */}
       <main
         ref={scrollRef}
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-2 sm:px-4 sm:py-3"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 sm:px-5 sm:py-4"
         style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
         {/* Crew list — who you can call before reasoning starts */}
@@ -537,11 +657,10 @@ export function ChatWindow() {
             >
               <div className="space-y-2">
                 <p className="text-sm font-medium text-white/80">
-                  Your council crew
+                  Circle AI
                 </p>
                 <p className="max-w-sm text-xs text-white/55">
-                  Call them when you need to plan. Send a message to bring the
-                  team in — then the reasoning starts and the team comes.
+                  Lumana is your default companion. Say hi to start. To reach Sam, Alex, Maya, or Nova, call them by name.
                 </p>
               </div>
               <div className="grid w-full max-w-md grid-cols-1 gap-2 sm:grid-cols-2">
@@ -569,14 +688,16 @@ export function ChatWindow() {
                 ))}
               </div>
               <p className="text-[11px] text-white/45">
-                Type something like “call our team” or describe your idea to get
-                the council going.
+                Say hello to start — Lumana will reply.
               </p>
             </motion.div>
           )}
 
-          {visibleMessages.map((m) => {
+          {visibleMessages.map((m, idx) => {
             const key = m.id;
+            const isLatestUserMessage =
+              m.role === "user" &&
+              visibleMessages.slice(idx + 1).every((n) => n.role !== "user");
             if (m.role === "user") {
               return (
                 <MessageBubble
@@ -584,51 +705,54 @@ export function ChatWindow() {
                   role="user"
                   content={m.content}
                   createdAt={m.createdAt}
+                  onCopy={() => handleCopyUserMessage(m.content)}
+                  onDelete={
+                    isLatestUserMessage
+                      ? () => handleDeleteLatestUserMessage(m.id)
+                      : undefined
+                  }
+                  onEdit={
+                    isLatestUserMessage
+                      ? (edited) => handleEditUserMessage(m.id, edited)
+                      : undefined
+                  }
                 />
               );
             }
+            const isLastMessage = visibleMessages.indexOf(m) === visibleMessages.length - 1;
+            const isStreamingMessage = isBusy && isLastMessage;
             return (
-              <AgentMessage
-                key={key}
-                content={m.content}
-                agentName={m.agentName ?? "Agent"}
-                createdAt={m.createdAt}
-              />
+              <div key={key} className="group">
+                <StreamingMessage
+                  content={m.content}
+                  agentName={m.agentName ?? "Lumana"}
+                  createdAt={m.createdAt}
+                  isStreaming={isStreamingMessage}
+                  actionSlot={
+                    <MessageActions
+                      messageId={m.id}
+                      messageText={m.content}
+                      onFeedback={(type) => handleFeedback(m.id, type)}
+                      onHide={() => handleHideMessage(m.id)}
+                      feedbackState={feedbackByMessage[m.id] ?? null}
+                    />
+                  }
+                />
+              </div>
             );
           })}
 
-          {isBusy && (
-            <motion.div
-              key="typing"
-              variants={fadeInUp}
-              initial="hidden"
-              animate="visible"
-              exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.16, ease: "easeOut" }}
-              className="mt-2 flex items-center gap-2 text-[11px] text-white/55"
-            >
-              <div className="flex h-7 items-center rounded-2xl bg-white/10 px-3 backdrop-blur-xl">
-                <span className={cn("mr-1 h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-300")} />
-                <span className="inline-flex gap-1">
-                  <span className="animate-bounce delay-[0ms]">●</span>
-                  <span className="animate-bounce delay-[100ms]">●</span>
-                  <span className="animate-bounce delay-[200ms]">●</span>
-                </span>
-              </div>
-              <span>Agents are typing</span>
-            </motion.div>
-          )}
         </AnimatePresence>
       </main>
 
       {error ? (
-        <div className="shrink-0 border-t border-rose-500/20 bg-rose-500/10 px-3 py-2 text-[10px] text-rose-100 sm:px-4 sm:text-[11px]">
+        <div className="shrink-0 border-t border-rose-500/20 bg-rose-500/10 px-4 py-2.5 text-[11px] text-rose-100 sm:px-5 sm:text-xs">
           {error}
         </div>
       ) : null}
 
       {/* Fixed footer */}
-      <footer className="shrink-0 border-t border-white/10 bg-black/80 px-3 py-2 backdrop-blur-xl sm:px-4 sm:py-3">
+      <footer className="shrink-0 border-t border-white/[0.06] bg-black/90 px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4">
         <MessageInput disabled={status !== "idle" || !me?.email} onSend={handleSend} />
       </footer>
         </>

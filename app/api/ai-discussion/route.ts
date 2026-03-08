@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { runAgentDiscussion } from "@/services/aiEngine";
 import type { EngineMessage } from "@/services/aiEngine";
+import { routeMessage } from "@/services/agentRouter";
 import { configErrorResponse } from "@/lib/configError";
 import { getSession } from "@/lib/auth";
 import { query } from "@/lib/db";
+
+function generateId(prefix: string): string {
+  return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+}
 
 // Allow up to 60s for multi-agent + insight (Vercel Pro default; Hobby 10s)
 export const maxDuration = 60;
@@ -61,19 +65,60 @@ export async function POST(req: Request) {
   try {
     const historyTyped = (history ?? []) as EngineMessage[];
 
-    const result = await runAgentDiscussion({
-      userMessage,
-      history: historyTyped,
-      options: {
-        internalDiscussion: false,
-        fastReply: true, // 1 agent, no selection LLM = instant reply
-      },
+    let personalSystemPrompt: string | undefined;
+    let userContext: { nickname?: string; gender?: string; aiPersonality?: string } | undefined;
+    const personaRes = await query<{
+      system_prompt: string;
+      nickname: string;
+      gender: string | null;
+      ai_personality: string | null;
+    }>(
+      "SELECT system_prompt, nickname, gender, ai_personality FROM personas WHERE user_id = $1",
+      [session.sub]
+    );
+    const persona = personaRes.rows[0];
+    if (persona?.system_prompt) {
+      personalSystemPrompt = persona.system_prompt;
+    }
+    if (persona) {
+      userContext = {
+        nickname: persona.nickname?.trim() || undefined,
+        gender: persona.gender?.trim() && persona.gender !== "prefer-not" ? persona.gender : undefined,
+        aiPersonality: persona.ai_personality?.trim() || undefined,
+      };
+      if (!userContext.nickname && !userContext.gender && !userContext.aiPersonality) {
+        userContext = undefined;
+      }
+    }
+
+    const result = await routeMessage(userMessage, historyTyped, {
+      personalSystemPrompt,
+      userContext,
     });
 
-    // Return immediately; skip insight so user sees replies as fast as possible
+    const now = new Date().toISOString();
+    let newMessages: EngineMessage[];
+
+    if (result.kind === "intro") {
+      newMessages = result.messages;
+    } else {
+      newMessages = [
+        {
+          id: generateId("msg"),
+          role: "agent",
+          content: result.message,
+          agentName: result.agent,
+          createdAt: now,
+        },
+      ];
+    }
+
     return NextResponse.json({
-      ...result,
-      insight: { title: "Council reply", summary: "" },
+      agents: [],
+      messages: [...historyTyped, ...newMessages],
+      rounds: 1,
+      paused: false,
+      insight: { title: "", summary: "" },
     });
   } catch (e) {
     const configRes = configErrorResponse(e);

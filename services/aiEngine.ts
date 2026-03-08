@@ -43,6 +43,11 @@ export type DiscussionOptions = {
    * If true, skip the "which agents should reply" LLM call and pick 1 agent at random for instant reply.
    */
   fastReply?: boolean;
+  /**
+   * When set, overrides the agent's system prompt with this personal AI prompt.
+   * Used for per-user personalized AI from persona.
+   */
+  personalSystemPrompt?: string;
 };
 
 export type DiscussionResult = {
@@ -208,8 +213,9 @@ export async function generateAgentReply(params: {
   userMessage: string;
   history?: EngineMessage[];
   mode?: "user-facing" | "agent-to-agent" | "internal";
+  personalSystemPrompt?: string;
 }): Promise<EngineMessage> {
-  const { agentId, userMessage, history, mode = "user-facing" } = params;
+  const { agentId, userMessage, history, mode = "user-facing", personalSystemPrompt } = params;
   const agent = getAgent(agentId);
 
   const context = formatHistoryForAgent(userMessage, history, agent.name);
@@ -229,8 +235,9 @@ export async function generateAgentReply(params: {
         "Reply in 2–4 short sentences or a few bullet points. Be warm, direct, and helpful. No long paragraphs or jargon. Stay in your personality.";
   }
 
+  const basePrompt = personalSystemPrompt ?? agent.systemPrompt;
   const system = [
-    agent.systemPrompt,
+    basePrompt,
     "",
     "General instructions:",
     behaviorInstruction,
@@ -281,6 +288,8 @@ export async function runAgentDiscussion(params: {
     },
   ];
 
+  const personalPrompt = options?.personalSystemPrompt;
+
   // Run all agent replies in parallel so we wait for the slowest, not the sum
   const replies = await Promise.all(
     speakingAgents.map((agent) =>
@@ -289,6 +298,7 @@ export async function runAgentDiscussion(params: {
         userMessage,
         history: messages,
         mode: "user-facing",
+        personalSystemPrompt: personalPrompt,
       })
     )
   );

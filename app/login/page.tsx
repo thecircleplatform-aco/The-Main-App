@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { GlassPanel } from "@/components/glass-panel";
+import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { fadeInUp } from "@/lib/animations";
@@ -44,6 +45,7 @@ export default function LoginPage() {
   }
 
   return (
+    <GalaxyPageWrapper>
     <div className="min-h-dvh px-4 pb-20 pt-14 md:px-8">
       <div className="mx-auto flex min-h-[calc(100dvh-8rem)] max-w-md flex-col justify-center">
         <motion.div
@@ -135,5 +137,6 @@ export default function LoginPage() {
         </motion.div>
       </div>
     </div>
+    </GalaxyPageWrapper>
   );
 }

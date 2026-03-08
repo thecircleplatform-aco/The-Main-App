@@ -1,7 +1,9 @@
 import { GlassPanel } from "@/components/glass-panel";
+import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
 
 export default function TermsPage() {
   return (
+    <GalaxyPageWrapper>
     <div className="min-h-dvh px-4 pb-20 pt-16 md:px-8">
       <div className="mx-auto max-w-3xl space-y-6">
         <GlassPanel className="p-6 md:p-8 border-white/20 bg-black/60">
@@ -101,6 +103,7 @@ export default function TermsPage() {
         </GlassPanel>
       </div>
     </div>
+    </GalaxyPageWrapper>
   );
 }
 

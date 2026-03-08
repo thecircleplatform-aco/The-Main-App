@@ -15,6 +15,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { GlassPanel } from "@/components/glass-panel";
+import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
 import { releases, type ReleaseFeature } from "@/lib/changelog";
 import { useVersion } from "@/components/VersionDisplay";
 import { fadeInUp, softSpring } from "@/lib/animations";
@@ -68,6 +69,7 @@ export default function ChangelogPage() {
   const version = useVersion();
 
   return (
+    <GalaxyPageWrapper>
     <div className="min-h-dvh px-4 pb-24 pt-14 md:px-8">
       <div className="mx-auto max-w-3xl">
         <motion.div
@@ -188,10 +190,11 @@ export default function ChangelogPage() {
           className="mt-12 text-center"
         >
           <p className="text-[11px] text-white/40">
-            Built with Circle · powered by Lumala
+            Built with Circle · powered by Lumana
           </p>
         </motion.div>
       </div>
     </div>
+    </GalaxyPageWrapper>
   );
 }

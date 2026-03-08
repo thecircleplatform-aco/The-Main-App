@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
+    <GalaxyPageWrapper>
     <div className="min-h-dvh px-4 pb-16 pt-12 md:px-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row">
         <aside className="w-full md:w-60">
@@ -54,6 +56,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <main className="w-full flex-1">{children}</main>
       </div>
     </div>
+    </GalaxyPageWrapper>
   );
 }
 

@@ -125,6 +125,43 @@ async function runMigrations() {
     );
   `);
 
+  // PERSONAS (per-user AI persona from onboarding)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS personas (
+      id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id             uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      nickname            text NOT NULL,
+      interests           jsonb NOT NULL DEFAULT '[]'::jsonb,
+      goals               text,
+      ai_personality      text NOT NULL,
+      idea_sharing_enabled boolean NOT NULL DEFAULT false,
+      system_prompt       text NOT NULL,
+      gender              text,
+      birth_date          date,
+      country             text,
+      created_at          timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`ALTER TABLE personas ADD COLUMN IF NOT EXISTS gender text;`);
+  await pool.query(`ALTER TABLE personas ADD COLUMN IF NOT EXISTS birth_date date;`);
+  await pool.query(`ALTER TABLE personas ADD COLUMN IF NOT EXISTS country text;`);
+
+  // MESSAGE_FEEDBACK (user ratings for AI messages)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS message_feedback (
+      id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id       uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      message_id    text NOT NULL,
+      feedback_type text NOT NULL CHECK (feedback_type IN ('helpful', 'not_helpful')),
+      created_at    timestamptz NOT NULL DEFAULT now(),
+      UNIQUE(user_id, message_id)
+    );
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_message_feedback_user_id
+      ON message_feedback (user_id);
+  `);
+
   // USER_SETTINGS
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_settings (
@@ -182,6 +219,9 @@ async function runMigrations() {
 
     CREATE INDEX IF NOT EXISTS idx_admin_users_email_ci
       ON admin_users (lower(email));
+
+    CREATE INDEX IF NOT EXISTS idx_personas_user_id
+      ON personas (user_id);
   `);
 }
 

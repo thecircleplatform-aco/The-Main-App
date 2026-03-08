@@ -33,8 +33,7 @@ export default function RootLayout({
           "min-h-dvh bg-black text-white antialiased",
         ].join(" ")}
       >
-        <div className="pointer-events-none fixed inset-0 bg-hero" />
-        <div className="relative">{children}</div>
+        {children}
       </body>
     </html>
   );

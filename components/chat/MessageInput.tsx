@@ -15,7 +15,7 @@ export type MessageInputProps = {
 
 export function MessageInput({
   disabled,
-  placeholder = "Message the council…",
+  placeholder = "Type a message…",
   onSend,
   onAttach,
   acceptMedia = "image/*,.pdf,.doc,.docx",
@@ -59,8 +59,9 @@ export function MessageInput({
   return (
     <div
       className={cn(
-        "w-full flex items-center gap-0.5 rounded-2xl border border-white/12 bg-white/[0.06] py-1 pl-1.5 pr-1 shadow-soft backdrop-blur-2xl",
-        "focus-within:border-white/20 focus-within:ring-1 focus-within:ring-white/10 focus-within:bg-white/[0.08]"
+        "w-full flex items-center gap-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 transition-colors duration-200",
+        "focus-within:border-white/20 focus-within:bg-white/[0.06] focus-within:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]",
+        (disabled || isSubmitting) && "opacity-70"
       )}
     >
       <input
@@ -76,14 +77,14 @@ export function MessageInput({
         type="button"
         onClick={handleAttachClick}
         disabled={disabled || isSubmitting}
-        aria-label="Attach file or image"
+        aria-label="Attach file"
         className={cn(
-          "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white/50 transition-colors",
-          "hover:bg-white/10 hover:text-white/80 active:scale-95",
-          "disabled:pointer-events-none disabled:opacity-40"
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition-all duration-150",
+          "hover:bg-white/10 hover:text-white/80",
+          "disabled:pointer-events-none disabled:opacity-50"
         )}
       >
-        <Paperclip className="h-3.5 w-3.5" aria-hidden />
+        <Paperclip className="h-4 w-4" aria-hidden strokeWidth={1.75} />
       </button>
 
       <Textarea
@@ -94,8 +95,8 @@ export function MessageInput({
         placeholder={placeholder}
         rows={1}
         className={cn(
-          "min-h-[32px] max-h-20 min-w-0 flex-1 resize-none rounded-lg border-0 bg-transparent py-1.5 px-2 text-xs shadow-none focus:ring-0 focus:outline-none",
-          "placeholder:text-white/40"
+          "min-h-[36px] max-h-24 min-w-0 flex-1 resize-none border-0 bg-transparent py-2 px-3 text-[13px] leading-[1.4] shadow-none outline-none focus:ring-0",
+          "placeholder:text-white/35"
         )}
       />
 
@@ -105,13 +106,13 @@ export function MessageInput({
         disabled={!canSend}
         aria-label="Send message"
         className={cn(
-          "ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-150",
           canSend
-            ? "bg-white text-black hover:bg-white/90 active:scale-95"
-            : "bg-white/15 text-white/40 cursor-not-allowed"
+            ? "bg-white text-zinc-900 hover:bg-white/95 hover:shadow-sm"
+            : "bg-white/10 text-white/30 cursor-not-allowed"
         )}
       >
-        <Send className="h-3.5 w-3.5" aria-hidden />
+        <Send className="h-4 w-4" aria-hidden strokeWidth={2} />
       </button>
     </div>
   );

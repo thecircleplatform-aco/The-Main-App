@@ -11,6 +11,7 @@ const optionalString = z
 
 const envSchema = z.object({
   DEEPSEEK_API_KEY: optionalString,
+  GEMINI_API_KEY: optionalString,
   DATABASE_URL: optionalString,
   SESSION_SECRET: optionalString,
 });
@@ -28,6 +29,7 @@ function getParsed() {
   const parsed = envSchema.safeParse(process.env);
   globalThis.__circle_env = parsed.success ? parsed.data : {
     DEEPSEEK_API_KEY: "",
+    GEMINI_API_KEY: "",
     DATABASE_URL: "",
     SESSION_SECRET: "",
   };
@@ -55,6 +57,17 @@ export function getDeepSeekKey(): string {
     throw e;
   }
   return key;
+}
+
+/** Use for Gemini (vision/images). Returns empty if not configured. */
+export function getGeminiKey(): string {
+  return getParsed().GEMINI_API_KEY ?? "";
+}
+
+/** True if Gemini API key is set (for image/vision features). */
+export function hasGemini(): boolean {
+  const key = getGeminiKey();
+  return key.length > 10;
 }
 
 /** Use for DB. Throws if not configured. */

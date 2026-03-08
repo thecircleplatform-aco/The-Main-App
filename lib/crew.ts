@@ -1,6 +1,6 @@
 /**
- * Council crew roster for the chat UI — who the user can call for planning.
- * Kept in sync with agents in services/aiEngine.
+ * Personal AI Crew roster for the chat UI.
+ * Lumana (Circle AI) is default. Sam, Alex, Maya, Nova reply when called by name.
  */
 export type CrewMember = {
   id: string;
@@ -9,9 +9,9 @@ export type CrewMember = {
 };
 
 export const CREW: CrewMember[] = [
-  { id: "alex", name: "Alex", description: "Logical strategist" },
-  { id: "sam", name: "Sam", description: "Calm observer" },
-  { id: "maya", name: "Maya", description: "Empathetic thinker" },
-  { id: "victor", name: "Victor", description: "Critical challenger" },
+  { id: "lumana", name: "Lumana", description: "Circle AI — your default companion" },
+  { id: "sam", name: "Sam", description: "Friendly everyday assistant" },
+  { id: "alex", name: "Alex", description: "Logical reasoning & research" },
+  { id: "maya", name: "Maya", description: "Emotional & relationship advisor" },
   { id: "nova", name: "Nova", description: "Creative thinker" },
 ];
