@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { BlockedUserChecker } from "@/components/BlockedUserChecker";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -33,7 +34,7 @@ export default function RootLayout({
           "min-h-dvh bg-black text-white antialiased",
         ].join(" ")}
       >
-        {children}
+        <BlockedUserChecker>{children}</BlockedUserChecker>
       </body>
     </html>
   );

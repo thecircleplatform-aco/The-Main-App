@@ -10,11 +10,28 @@ export async function GET() {
       return NextResponse.json({ email: null, name: null, id: null, deletionScheduledAt: null });
     }
 
-    const res = await query<{ deletion_scheduled_at: string | null }>(
-      "SELECT deletion_scheduled_at FROM users WHERE id = $1",
+    const res = await query<{
+      deletion_scheduled_at: string | null;
+      status: string | null;
+    }>(
+      "SELECT deletion_scheduled_at, status FROM users WHERE id = $1",
       [session.sub]
     );
-    const deletionScheduledAt = res.rows[0]?.deletion_scheduled_at ?? null;
+    const row = res.rows[0];
+    const deletionScheduledAt = row?.deletion_scheduled_at ?? null;
+    const status = row?.status ?? "active";
+
+    if (status === "blocked" || status === "shadow_banned") {
+      return NextResponse.json(
+        {
+          blocked: true,
+          status,
+          message:
+            "Your account has been blocked. If you believe this is a mistake, please contact support.",
+        },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({
       id: session.sub,

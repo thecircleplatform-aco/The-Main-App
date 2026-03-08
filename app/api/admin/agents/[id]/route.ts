@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { query } from "@/lib/db";
 import { configErrorResponse } from "@/lib/configError";
+import { requireAdmin } from "@/lib/admin";
 
 const paramsSchema = z.object({
   id: z.string().uuid(),
@@ -19,6 +20,9 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  const auth = await requireAdmin({ requireEdit: true });
+  if (auth instanceof NextResponse) return auth;
+
   const parsedParams = paramsSchema.safeParse(params);
   if (!parsedParams.success) {
     return NextResponse.json({ error: "Invalid agent id" }, { status: 400 });

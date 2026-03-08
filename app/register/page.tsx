@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { motion } from "framer-motion";
 import { GlassPanel } from "@/components/glass-panel";
 import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
@@ -26,11 +27,17 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name: name || undefined }),
+        body: JSON.stringify({
+          email,
+          password,
+          name: name || undefined,
+          deviceFingerprint: getDeviceFingerprint(),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "Registration failed.");
+        if (data.shadowBanned) router.push("/help");
         return;
       }
       router.push("/onboarding");

@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const COOKIE_NAME = "circle_session";
 
-const PUBLIC_PATHS = ["/login", "/register", "/terms", "/privacy", "/ai-policy"];
+const PUBLIC_PATHS = ["/login", "/register", "/terms", "/privacy", "/ai-policy", "/help"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));

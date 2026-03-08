@@ -3,11 +3,13 @@ import { z } from "zod";
 import { query } from "@/lib/db";
 import { hashPassword, createSession } from "@/lib/auth";
 import { configErrorResponse } from "@/lib/configError";
+import { getClientIp } from "@/lib/request-utils";
 
 const bodySchema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   name: z.string().max(120).optional(),
+  deviceFingerprint: z.string().min(1).optional(),
 });
 
 export async function POST(request: Request) {
@@ -19,8 +21,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    const { email, password, name } = parsed.data;
+    const { email, password, name, deviceFingerprint } = parsed.data;
     const normalizedEmail = email.trim().toLowerCase();
+    const ip = getClientIp(request);
+
+    if (deviceFingerprint) {
+      const existingDevice = await query<{ user_id: string }>(
+        "SELECT user_id FROM devices WHERE device_fingerprint = $1",
+        [deviceFingerprint]
+      ).catch(() => ({ rows: [] }));
+      if (existingDevice.rows.length > 0) {
+        return NextResponse.json(
+          { error: "Only one account is allowed per device." },
+          { status: 403 }
+        );
+      }
+
+      const abuseCount = await query<{ count: string }>(
+        `SELECT count(*)::text as count FROM account_creation_logs
+         WHERE device_fingerprint = $1 AND created_at > now() - interval '30 days'`,
+        [deviceFingerprint]
+      ).catch(() => ({ rows: [{ count: "0" }] }));
+      const count = parseInt(abuseCount.rows[0]?.count ?? "0", 10);
+      if (count >= 10) {
+        return NextResponse.json(
+          {
+            error:
+              "Your device has exceeded account creation limits. Please contact support if you believe this is a mistake.",
+            shadowBanned: true,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const existing = await query<{ id: string }>(
       "SELECT id FROM users WHERE lower(email) = $1",
@@ -43,6 +76,24 @@ export async function POST(request: Request) {
     const row = insert.rows[0];
     if (!row) {
       return NextResponse.json({ error: "Registration failed." }, { status: 500 });
+    }
+
+    if (deviceFingerprint) {
+      await query(
+        `INSERT INTO devices (device_fingerprint, user_id) VALUES ($1, $2) ON CONFLICT (device_fingerprint) DO NOTHING`,
+        [deviceFingerprint, row.id]
+      ).catch(() => {});
+      await query(
+        `INSERT INTO account_creation_logs (device_fingerprint, ip_address) VALUES ($1, $2)`,
+        [deviceFingerprint, ip ?? "unknown"]
+      ).catch(() => {});
+    }
+
+    if (ip) {
+      await query(
+        `INSERT INTO user_ips (user_id, ip_address, device_id) VALUES ($1, $2, $3)`,
+        [row.id, ip, deviceFingerprint ?? null]
+      ).catch(() => {});
     }
 
     await createSession({

@@ -17,9 +17,41 @@ export type Release = {
 
 export const releases: Release[] = [
   {
+    version: "0.3.0",
+    aiVersion: "Lumana 1.4",
+    date: "2026-03-08",
+    features: [
+      {
+        title: "Admin user management",
+        description: "Right-click users in the admin panel to change username/email, reset password, block, shadow ban, delete, view IP history, and view account activity.",
+        icon: "settings",
+      },
+      {
+        title: "Block & shadow ban",
+        description: "Blocked or shadow-banned users are logged out and see a support message on login. Blocked users can contact support from the help center.",
+        icon: "shield",
+      },
+      {
+        title: "IP & device tracking",
+        description: "Login and registration IPs are stored. One account per device; abuse detection limits account creation from the same device.",
+        icon: "version",
+      },
+      {
+        title: "Support tickets",
+        description: "Blocked users can submit support messages. Admins view and respond at /admin/support and can unblock accounts.",
+        icon: "message",
+      },
+      {
+        title: "Help center",
+        description: "Dedicated /help page for blocked users to contact support. Admin action logs for audit.",
+        icon: "heart",
+      },
+    ],
+  },
+  {
     version: "0.2.0",
     aiVersion: "Lumana 1.4",
-    date: "March 2025",
+    date: "2026-03-07",
     features: [
       {
         title: "Streaming responses",
@@ -66,7 +98,7 @@ export const releases: Release[] = [
   {
     version: "0.1.0",
     aiVersion: "Lumala 1.3",
-    date: "2025",
+    date: "2026-03-06",
     features: [
       {
         title: "Multi-agent AI council",

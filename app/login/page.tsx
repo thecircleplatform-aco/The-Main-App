@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { getDeviceFingerprint } from "@/lib/fingerprint";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { GlassPanel } from "@/components/glass-panel";
@@ -28,11 +29,16 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          deviceId: getDeviceFingerprint(),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "Login failed.");
+        if (data.blocked) router.push("/help");
         return;
       }
       router.push(from.startsWith("/") ? from : "/");

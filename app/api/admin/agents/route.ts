@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { query } from "@/lib/db";
 import { configErrorResponse } from "@/lib/configError";
+import { requireAdmin } from "@/lib/admin";
 
 const agentBodySchema = z.object({
   name: z.string().min(2),
@@ -12,6 +13,9 @@ const agentBodySchema = z.object({
 });
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const res = await query(
       "select id, name, personality, system_prompt, avatar, active, created_at from agents order by created_at desc"
@@ -25,6 +29,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireAdmin({ requireEdit: true });
+  if (auth instanceof NextResponse) return auth;
+
   const json = await req.json().catch(() => null);
   const parsed = agentBodySchema.safeParse(json);
   if (!parsed.success) {
