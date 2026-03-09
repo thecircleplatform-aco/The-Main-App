@@ -27,6 +27,7 @@ export function SupportTicketViewer({ tickets: initialTickets }: SupportTicketVi
   const [selected, setSelected] = React.useState<Ticket | null>(null);
   const [response, setResponse] = React.useState("");
   const [unblockUser, setUnblockUser] = React.useState(false);
+  const [unblockEmail, setUnblockEmail] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -39,6 +40,10 @@ export function SupportTicketViewer({ tickets: initialTickets }: SupportTicketVi
   const handleRespond = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected || !response.trim()) return;
+    if (unblockUser && !selected.user_id && !unblockEmail.trim()) {
+      setError("Enter the user's email to unblock (ticket has no linked account).");
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
@@ -49,6 +54,7 @@ export function SupportTicketViewer({ tickets: initialTickets }: SupportTicketVi
           ticketId: selected.id,
           responseMessage: response.trim(),
           unblockUser,
+          unblockEmail: unblockEmail.trim() || undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -58,6 +64,7 @@ export function SupportTicketViewer({ tickets: initialTickets }: SupportTicketVi
       }
       setResponse("");
       setUnblockUser(false);
+      setUnblockEmail("");
       setSelected(null);
       await refresh();
     } catch {
@@ -88,6 +95,7 @@ export function SupportTicketViewer({ tickets: initialTickets }: SupportTicketVi
                   setSelected(t);
                   setResponse("");
                   setUnblockUser(false);
+                  setUnblockEmail("");
                 }}
                 className={`w-full rounded-2xl border p-3 text-left text-xs transition ${
                   selected?.id === t.id
@@ -173,6 +181,24 @@ export function SupportTicketViewer({ tickets: initialTickets }: SupportTicketVi
                   Unblock user (restore account)
                 </span>
               </label>
+              {unblockUser && !selected.user_id && (
+                <div>
+                  <label
+                    htmlFor="unblock-email"
+                    className="mb-1.5 block text-xs font-medium text-white/70"
+                  >
+                    User email (required for anonymous tickets)
+                  </label>
+                  <Input
+                    id="unblock-email"
+                    type="email"
+                    placeholder="user@example.com"
+                    value={unblockEmail}
+                    onChange={(e) => setUnblockEmail(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              )}
               {error && (
                 <p className="text-sm text-rose-400" role="alert">
                   {error}

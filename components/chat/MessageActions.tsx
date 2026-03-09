@@ -5,6 +5,8 @@ import { Copy, ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MessageMenu } from "./MessageMenu";
+import { shareContent } from "@/lib/share";
+import { hapticImpact } from "@/lib/capacitor";
 
 export type MessageActionsProps = {
   messageId: string;
@@ -43,6 +45,7 @@ export function MessageActions({
   const [copySuccess, setCopySuccess] = React.useState(false);
 
   const handleCopy = React.useCallback(() => {
+    hapticImpact();
     if (typeof navigator?.clipboard?.writeText === "function") {
       navigator.clipboard.writeText(messageText).then(
         () => {
@@ -65,14 +68,23 @@ export function MessageActions({
     }
   }, [messageText, onCopy]);
 
-  const handleShareCopyLink = React.useCallback(() => {
+  const handleShare = React.useCallback(async () => {
+    hapticImpact();
     const url = typeof window !== "undefined"
       ? `${window.location.origin}/?share=${encodeURIComponent(messageId)}`
       : "";
-    if (typeof navigator?.clipboard?.writeText === "function") {
-      navigator.clipboard.writeText(url).then(() => onShare?.("copy_link"));
+    const shared = await shareContent({
+      title: "Circle Insight",
+      text: messageText.slice(0, 200) + (messageText.length > 200 ? "…" : ""),
+      url: url || undefined,
+      dialogTitle: "Share",
+    });
+    if (!shared && typeof navigator?.clipboard?.writeText === "function") {
+      navigator.clipboard.writeText(url || messageText).then(() => onShare?.("copy_link"));
+    } else if (shared) {
+      onShare?.("copy_link");
     }
-  }, [messageId, onShare]);
+  }, [messageId, messageText, onShare]);
 
   return (
     <div
@@ -161,7 +173,7 @@ export function MessageActions({
 
       <button
         type="button"
-        onClick={handleShareCopyLink}
+        onClick={handleShare}
         aria-label="Share"
         className={cn(
           "flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",

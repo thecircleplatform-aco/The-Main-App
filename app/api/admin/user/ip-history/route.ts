@@ -28,16 +28,26 @@ export async function GET(request: Request) {
 
     const { userId } = parsed.data;
 
-    const res = await query<IpRow>(
-      `SELECT id, ip_address, device_id, created_at
-       FROM user_ips
-       WHERE user_id = $1
-       ORDER BY created_at DESC
-       LIMIT 100`,
-      [userId]
-    );
+    let rows: IpRow[] = [];
+    try {
+      const res = await query<IpRow>(
+        `SELECT id, ip_address, device_id, created_at
+         FROM user_ips
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT 100`,
+        [userId]
+      );
+      rows = res.rows;
+    } catch (dbErr) {
+      const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+      if (msg.includes("does not exist") || msg.includes("relation")) {
+        return NextResponse.json({ ips: [] });
+      }
+      throw dbErr;
+    }
 
-    return NextResponse.json({ ips: res.rows });
+    return NextResponse.json({ ips: rows });
   } catch (e) {
     const configRes = configErrorResponse(e);
     if (configRes) return configRes;

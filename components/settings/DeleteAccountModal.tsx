@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { GlassPanel } from "@/components/glass-panel";
 import { Button } from "@/components/ui/button";
 import { DeleteReasonStep, REASON_OPTIONS, type ReasonValue } from "./DeleteReasonStep";
 import { DeleteConfirmStep } from "./DeleteConfirmStep";
@@ -88,7 +87,7 @@ export function DeleteAccountModal({
         aria-labelledby="delete-account-title"
       >
         <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/60"
           aria-hidden
           onClick={handleClose}
         />
@@ -100,7 +99,7 @@ export function DeleteAccountModal({
           className="relative z-10 w-full max-w-md"
           onClick={(e) => e.stopPropagation()}
         >
-          <GlassPanel className="p-6 shadow-xl">
+          <div className="rounded-2xl border border-white/10 bg-black/95 p-6 shadow-xl">
             <AnimatePresence mode="wait">
               {step === "confirm" && (
                 <motion.div
@@ -225,7 +224,7 @@ export function DeleteAccountModal({
                 </motion.div>
               )}
             </AnimatePresence>
-          </GlassPanel>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>

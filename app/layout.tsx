@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { BlockedUserChecker } from "@/components/BlockedUserChecker";
+import { CapacitorProvider } from "@/components/CapacitorProvider";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -20,6 +21,13 @@ export const metadata: Metadata = {
   description: "AI council platform for discussing ideas",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#000000",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,7 +42,9 @@ export default function RootLayout({
           "min-h-dvh bg-black text-white antialiased",
         ].join(" ")}
       >
-        <BlockedUserChecker>{children}</BlockedUserChecker>
+        <CapacitorProvider>
+          <BlockedUserChecker>{children}</BlockedUserChecker>
+        </CapacitorProvider>
       </body>
     </html>
   );

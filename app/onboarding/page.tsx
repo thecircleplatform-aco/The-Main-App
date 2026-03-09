@@ -9,37 +9,22 @@ import { fadeInUp } from "@/lib/animations";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [checking, setChecking] = React.useState(true);
 
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch("/api/persona/me");
-        if (res.ok && !cancelled) {
-          router.replace("/");
-          return;
-        }
+        if (cancelled) return;
+        if (res.ok) router.replace("/");
       } catch {
         // proceed to show form
       }
-      if (!cancelled) setChecking(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [router]);
-
-  if (checking) {
-    return (
-      <>
-        <GalaxyBackground />
-        <div className="relative flex min-h-dvh items-center justify-center px-4">
-          <p className="text-sm text-white/60">Loading…</p>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>

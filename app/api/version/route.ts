@@ -6,6 +6,10 @@ function getAppVersion(): string {
   return (pkg as { version?: string }).version ?? "0.1.0";
 }
 
+function getBuildDate(): string | null {
+  return (pkg as { buildDate?: string }).buildDate ?? null;
+}
+
 export async function GET() {
   const gitVersion =
     process.env.VERCEL_GIT_COMMIT_SHA ??
@@ -15,6 +19,7 @@ export async function GET() {
 
   return NextResponse.json({
     appVersion: getAppVersion(),
+    buildDate: getBuildDate(),
     gitVersion: gitVersion ? gitVersion.slice(0, 7) : null,
     aiVersion: AI_MODEL_VERSION,
   });

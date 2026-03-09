@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Loader2, Brain, X, Menu, Settings, FileText, Shield, Sparkles, User, LogIn, UserPlus, LogOut } from "lucide-react";
+import { Loader2, Brain, X, Menu, User, LogIn, UserPlus } from "lucide-react";
 import { AccountRecoveryView } from "@/components/account/AccountRecoveryView";
 import type { EngineMessage } from "@/services/aiEngine";
 import { MessageBubble } from "./MessageBubble";
@@ -67,10 +67,15 @@ export function ChatWindow() {
     name?: string;
     deletionScheduledAt?: string | null;
   } | null>(null);
+  const [mounted, setMounted] = React.useState(false);
 
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const internalScrollRef = React.useRef<HTMLDivElement | null>(null);
   const isSendingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (me?.id) {
@@ -78,11 +83,21 @@ export function ChatWindow() {
     }
   }, [me?.id]);
 
-  // Must be signed in to use chat; redirect to login if not
+  // Must be signed in to use chat; redirect to login if not, or /help if blocked
   React.useEffect(() => {
     fetch("/api/me")
-      .then((r) => (r.ok ? r.json() : { id: null, email: null, name: null, deletionScheduledAt: null }))
+      .then(async (r) => {
+        if (r.status === 403) {
+          const data = await r.json().catch(() => ({}));
+          if (data?.blocked) {
+            window.location.replace("/help");
+            return null;
+          }
+        }
+        return r.ok ? r.json() : { id: null, email: null, name: null, deletionScheduledAt: null };
+      })
       .then((data) => {
+        if (!data) return;
         setMe({ ...data, id: data.id ?? null });
         if (data.email == null) {
           const from = typeof window !== "undefined" ? window.location.pathname || "/" : "/";
@@ -407,40 +422,8 @@ export function ChatWindow() {
                 </div>
                 <p className="text-[10px] text-white/50">powered by ACO Network</p>
               </div>
-              <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
-                <Link
-                  href="/settings"
-                  onClick={() => setShowSideMenu(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <Settings className="h-4 w-4 text-white/60" />
-                  Settings
-                </Link>
-                <Link
-                  href="/privacy"
-                  onClick={() => setShowSideMenu(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <Shield className="h-4 w-4 text-white/60" />
-                  Privacy
-                </Link>
-                <Link
-                  href="/terms"
-                  onClick={() => setShowSideMenu(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <FileText className="h-4 w-4 text-white/60" />
-                  Terms
-                </Link>
-                <Link
-                  href="/ai-policy"
-                  onClick={() => setShowSideMenu(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <Sparkles className="h-4 w-4 text-white/60" />
-                  AI policy
-                </Link>
-                {me?.email ? null : (
+              <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3">
+                {!(mounted && me?.email) && (
                   <>
                     <Link
                       href="/login"
@@ -462,55 +445,28 @@ export function ChatWindow() {
                 )}
               </nav>
               <div className="flex shrink-0 flex-col gap-0.5 border-t border-white/10 px-4 py-3">
-                {me?.email ? (
-                  <>
-                    <Link
-                      href="/settings"
-                      onClick={() => setShowSideMenu(false)}
-                      className="flex items-center gap-3 transition-colors hover:bg-white/5 rounded-xl px-2 py-2 -mx-2"
-                    >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                        <User className="h-5 w-5 text-white/70" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        {me.name && (
-                          <p className="truncate text-xs font-medium text-white/90">
-                            {me.name}
-                          </p>
-                        )}
-                        <p className="truncate text-[11px] text-white/60">
-                          {me.email}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-white/40">Tap for Settings</p>
-                      </div>
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await fetch("/api/auth/logout", { method: "POST" });
-                        setMe({ id: null, email: null });
-                        setShowSideMenu(false);
-                        window.location.reload();
-                      }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                      <LogOut className="h-4 w-4 text-white/60" />
-                      Log out
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-3">
+                {mounted && me?.email ? (
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowSideMenu(false)}
+                    className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/10 -mx-2"
+                  >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                      <User className="h-5 w-5 text-white/50" />
+                      <User className="h-5 w-5 text-white/70" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] text-white/50">Not signed in</p>
-                      <p className="mt-0.5 text-[10px] text-white/40">
-                        Log in or register to save your progress
+                      {me.name && (
+                        <p className="truncate text-xs font-medium text-white/90">
+                          {me.name}
+                        </p>
+                      )}
+                      <p className="truncate text-[11px] text-white/60">
+                        {me.email}
                       </p>
+                      <p className="mt-0.5 text-[10px] text-white/40">Tap for Settings</p>
                     </div>
-                  </div>
-                )}
+                  </Link>
+                ) : null}
               </div>
             </motion.aside>
           </>
@@ -753,7 +709,13 @@ export function ChatWindow() {
 
       {/* Fixed footer */}
       <footer className="shrink-0 border-t border-white/[0.06] bg-black/90 px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4">
-        <MessageInput disabled={status !== "idle" || !me?.email} onSend={handleSend} />
+        <MessageInput
+          disabled={status !== "idle" || !me?.email}
+          onSend={handleSend}
+          onAttach={(_files) => {
+            // Attachments: extend to send images to AI when API supports vision
+          }}
+        />
       </footer>
         </>
       )}

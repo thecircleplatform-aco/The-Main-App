@@ -3,14 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { GlassPanel } from "@/components/glass-panel";
+import { ChevronDown, FileText, Shield, Sparkles, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { DeleteAccountModal } from "@/components/settings/DeleteAccountModal";
 import { VersionDisplay, useVersion } from "@/components/VersionDisplay";
 import { cn } from "@/lib/utils";
 import { panelFade, fadeInUp, softSpring } from "@/lib/animations";
+
+const sectionCardClass =
+  "rounded-2xl border border-white/10 bg-white/5 p-5";
 
 type ProfileSettings = {
   displayName?: string;
@@ -54,6 +56,7 @@ export function SettingsView() {
   const [message, setMessage] = React.useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
+  const [showDataAccount, setShowDataAccount] = React.useState(false);
   const version = useVersion();
 
   React.useEffect(() => {
@@ -64,12 +67,24 @@ export function SettingsView() {
     setStatus("loading");
     setMessage(null);
     try {
-      const res = await fetch("/api/settings");
-      if (!res.ok) {
-        throw new Error(`Failed to load settings (${res.status})`);
+      const [settingsRes, meRes] = await Promise.all([
+        fetch("/api/settings"),
+        fetch("/api/me"),
+      ]);
+      if (!settingsRes.ok) {
+        throw new Error(`Failed to load settings (${settingsRes.status})`);
       }
-      const data = (await res.json()) as SettingsPayload;
-      setProfile(data.profile ?? {});
+      const data = (await settingsRes.json()) as SettingsPayload;
+      let profileData = data.profile ?? {};
+      // Use account name from signup as default display name when none is set
+      const hasDisplayName = typeof profileData.displayName === "string" && profileData.displayName.trim() !== "";
+      if (!hasDisplayName && meRes.ok) {
+        const me = (await meRes.json()) as { name?: string | null };
+        if (me?.name?.trim()) {
+          profileData = { ...profileData, displayName: me.name.trim() };
+        }
+      }
+      setProfile(profileData);
       setPrivacy(data.privacy ?? {});
       setNotifications(data.notifications ?? {});
       setAi(data.ai ?? {});
@@ -165,11 +180,11 @@ export function SettingsView() {
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/70 backdrop-blur-xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/70">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
             User settings
           </div>
-          <h1 className="mt-2 text-lg font-semibold text-white">
+          <h1 className="mt-2 text-lg font-semibold text-white/90">
             Circle preferences
           </h1>
           <p className="mt-1 text-xs text-white/50">
@@ -203,46 +218,52 @@ export function SettingsView() {
         </motion.div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.3fr)]">
-        {/* Left column: profile + privacy */}
-        <div className="space-y-4">
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">
-              Profile settings
-            </h2>
-            <p className="mt-1 text-[11px] text-white/55">
-              Configure how you appear in the product.
-            </p>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="space-y-1">
-                <label className="text-[11px] text-white/60">
-                  Display name
-                </label>
-                <Input
-                  value={profile.displayName ?? ""}
-                  onChange={(e) =>
-                    setProfile((p) => ({ ...p, displayName: e.target.value }))
-                  }
-                  placeholder="How should we refer to you?"
-                  className="h-9 rounded-2xl border-white/15 bg-white/5 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-white/60">Bio</label>
-                <Textarea
-                  value={profile.bio ?? ""}
-                  onChange={(e) =>
-                    setProfile((p) => ({ ...p, bio: e.target.value }))
-                  }
-                  placeholder="Short description that gives context to the council…"
-                  className="min-h-[80px] rounded-2xl border-white/15 bg-white/5 text-xs"
-                />
-              </div>
-            </div>
-          </GlassPanel>
+      <div className={sectionCardClass}>
+        <h2 className="text-sm font-semibold text-white/90">Legal & account</h2>
+        <p className="mt-1 text-[11px] text-white/55">
+          Policies and sign out.
+        </p>
+        <div className="mt-3 flex flex-col gap-1.5 text-sm">
+          <Link
+            href="/privacy"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <Shield className="h-4 w-4 text-white/60" />
+            Privacy
+          </Link>
+          <Link
+            href="/terms"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <FileText className="h-4 w-4 text-white/60" />
+            Terms
+          </Link>
+          <Link
+            href="/ai-policy"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <Sparkles className="h-4 w-4 text-white/60" />
+            AI policy
+          </Link>
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/";
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <LogOut className="h-4 w-4 text-white/60" />
+            Log out
+          </button>
+        </div>
+      </div>
 
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.3fr)]">
+        {/* Left column: privacy */}
+        <div className="space-y-4">
+          <div className={sectionCardClass}>
+            <h2 className="text-sm font-semibold text-white/90">
               Privacy settings
             </h2>
             <p className="mt-1 text-[11px] text-white/55">
@@ -304,20 +325,20 @@ export function SettingsView() {
                       dataRetentionDays: Number(e.target.value || 0),
                     }))
                   }
-                  className="h-9 w-24 rounded-2xl border-white/15 bg-white/5 text-xs"
+                  className="h-9 w-24 rounded-xl border-white/10 bg-white/5 text-xs backdrop-blur-none"
                 />
                 <p className="text-[10px] text-white/45">
                   Controls how long conversation history is retained.
                 </p>
               </div>
             </div>
-          </GlassPanel>
+          </div>
         </div>
 
         {/* Right column: notifications + AI + data */}
         <div className="space-y-4">
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">
+          <div className={sectionCardClass}>
+            <h2 className="text-sm font-semibold text-white/90">
               Notification settings
             </h2>
             <p className="mt-1 text-[11px] text-white/55">
@@ -384,10 +405,10 @@ export function SettingsView() {
                 </span>
               </label>
             </div>
-          </GlassPanel>
+          </div>
 
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">
+          <div className={sectionCardClass}>
+            <h2 className="text-sm font-semibold text-white/90">
               AI interaction
             </h2>
             <p className="mt-1 text-[11px] text-white/55">
@@ -473,38 +494,55 @@ export function SettingsView() {
                 </span>
               </label>
             </div>
-          </GlassPanel>
+          </div>
 
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">Data & account</h2>
-            <p className="mt-1 text-[11px] text-white/55">
-              Export your data or remove your account from Circle.
-            </p>
-            <div className="mt-3 flex flex-col gap-2 text-xs sm:flex-row">
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                disabled={busy}
-                onClick={() => void exportData()}
-                className="flex-1"
-              >
-                Export data (JSON)
-              </Button>
-              <Button
-                type="button"
-                size="md"
-                disabled={busy}
-                onClick={() => void openDeleteModal()}
-                className="flex-1 bg-rose-500/90 hover:bg-rose-500 text-xs"
-              >
-                Delete account
-              </Button>
-            </div>
-          </GlassPanel>
+          <div className={sectionCardClass}>
+            <button
+              type="button"
+              onClick={() => setShowDataAccount((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 text-left focus:outline-none focus:ring-2 focus:ring-white/15 focus:ring-offset-2 focus:ring-offset-black/95 rounded-lg -m-1 p-1"
+              aria-expanded={showDataAccount}
+            >
+              <div>
+                <h2 className="text-sm font-semibold text-white/70">Data & account</h2>
+                <p className="mt-0.5 text-[11px] text-white/45">
+                  Export data or remove your account
+                </p>
+              </div>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-white/40 transition-transform",
+                  showDataAccount && "rotate-180"
+                )}
+              />
+            </button>
+            {showDataAccount && (
+              <div className="mt-3 flex flex-col gap-2 text-xs sm:flex-row">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  disabled={busy}
+                  onClick={() => void exportData()}
+                  className="flex-1"
+                >
+                  Export data (JSON)
+                </Button>
+                <Button
+                  type="button"
+                  size="md"
+                  disabled={busy}
+                  onClick={() => void openDeleteModal()}
+                  className="flex-1 bg-rose-500/90 hover:bg-rose-500 text-xs"
+                >
+                  Delete account
+                </Button>
+              </div>
+            )}
+          </div>
 
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">Version & updates</h2>
+          <div className={sectionCardClass}>
+            <h2 className="text-sm font-semibold text-white/90">Version & updates</h2>
             <p className="mt-1 text-[11px] text-white/55">
               Current build versions and release notes.
             </p>
@@ -523,7 +561,7 @@ export function SettingsView() {
               View what&apos;s new
               <span className="text-[10px]">→</span>
             </Link>
-          </GlassPanel>
+          </div>
 
           <DeleteAccountModal
             open={showDeleteModal}

@@ -25,25 +25,34 @@ export async function GET(request: Request) {
 
     const { userId } = parsed.data;
 
-    const [sessionsRes, ipsRes, ticketsRes] = await Promise.all([
-      query<SessionRow>(
-        `SELECT id, created_at FROM sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
-        [userId]
-      ),
-      query<IpRow>(
-        `SELECT ip_address, device_id, created_at FROM user_ips WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
-        [userId]
-      ),
-      query<TicketRow>(
-        `SELECT id, message, status, created_at FROM support_tickets WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20`,
-        [userId]
-      ),
-    ]);
+    const sessionsRes = await query<SessionRow>(
+      `SELECT id, created_at FROM sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [userId]
+    );
+
+    let ipRows: IpRow[] = [];
+    let ticketRows: TicketRow[] = [];
+    try {
+      const [ipsRes, ticketsRes] = await Promise.all([
+        query<IpRow>(
+          `SELECT ip_address, device_id, created_at FROM user_ips WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+          [userId]
+        ),
+        query<TicketRow>(
+          `SELECT id, message, status, created_at FROM support_tickets WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20`,
+          [userId]
+        ),
+      ]);
+      ipRows = ipsRes.rows;
+      ticketRows = ticketsRes.rows;
+    } catch {
+      // user_ips or support_tickets table may not exist yet
+    }
 
     return NextResponse.json({
       sessions: sessionsRes.rows,
-      ipHistory: ipsRes.rows,
-      supportTickets: ticketsRes.rows,
+      ipHistory: ipRows,
+      supportTickets: ticketRows,
     });
   } catch (e) {
     const configRes = configErrorResponse(e);

@@ -17,6 +17,48 @@ export type Release = {
 
 export const releases: Release[] = [
   {
+    version: "0.4.0",
+    aiVersion: "Lumana 1.4",
+    date: "2026-03-09",
+    features: [
+      {
+        title: "Native mobile app (Capacitor)",
+        description: "Circle runs as a native Android and iOS app. Install on your phone from Android Studio or Xcode; the app loads thecircleplatform.org with full native features.",
+        icon: "version",
+      },
+      {
+        title: "Camera & gallery",
+        description: "Take photos or pick from gallery in chat (profile pictures, sharing images with AI). Native camera on mobile, file picker on web.",
+        icon: "sparkle",
+      },
+      {
+        title: "Voice input",
+        description: "Speech-to-text in the chat input. Tap the mic, speak, and your words appear as text before sending.",
+        icon: "message",
+      },
+      {
+        title: "Push & local notifications",
+        description: "Register for push notifications (reminders, goal updates, messages). Schedule local reminders for check-ins and study goals.",
+        icon: "settings",
+      },
+      {
+        title: "Haptic feedback",
+        description: "Light vibration when you send a message, tap Copy or Share, or press buttons—feels native on mobile.",
+        icon: "heart",
+      },
+      {
+        title: "Native share",
+        description: "Share AI responses with the system share sheet (apps, messages, email) on mobile instead of only copying.",
+        icon: "message",
+      },
+      {
+        title: "Build date in version",
+        description: "Version API and Settings now include build date (2026-03-09) alongside app and Git version.",
+        icon: "version",
+      },
+    ],
+  },
+  {
     version: "0.3.0",
     aiVersion: "Lumana 1.4",
     date: "2026-03-08",

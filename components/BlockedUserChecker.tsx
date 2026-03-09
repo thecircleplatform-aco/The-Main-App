@@ -1,18 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const HELP_PATH = "/help";
 
 export function BlockedUserChecker({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const [checked, setChecked] = React.useState(false);
 
   React.useEffect(() => {
-    if (pathname === HELP_PATH || pathname.startsWith("/login") || pathname.startsWith("/register")) {
-      setChecked(true);
+    if (pathname === HELP_PATH || pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/terms") || pathname.startsWith("/privacy") || pathname.startsWith("/ai-policy")) {
       return;
     }
     let cancelled = false;
@@ -22,19 +19,16 @@ export function BlockedUserChecker({ children }: { children: React.ReactNode }) 
         if (res.status === 403) {
           return res.json().then((data) => {
             if (data?.blocked && !cancelled) {
-              router.replace(HELP_PATH);
+              window.location.replace(HELP_PATH);
             }
           });
         }
       })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setChecked(true);
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [pathname, router]);
+  }, [pathname]);
 
   return <>{children}</>;
 }

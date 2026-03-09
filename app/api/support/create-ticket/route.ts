@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { query } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { configErrorResponse } from "@/lib/configError";
 
 const bodySchema = z.object({
@@ -8,7 +9,7 @@ const bodySchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Create a support ticket. Called by blocked/shadow-banned users. userId optional if not logged in. */
+/** Create a support ticket. Called by blocked/shadow-banned users. Uses session when available (incl. blocked users). */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -18,14 +19,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    const { message, userId } = parsed.data;
+    const { message, userId: clientUserId } = parsed.data;
+    const session = await getSession();
+    const userId = clientUserId ?? session?.sub ?? null;
+    const submitterEmail = session?.email ?? null;
+    const submitterName = session?.name ?? null;
 
     const insert = await query<{ id: string }>(
-      `INSERT INTO support_tickets (user_id, message, status)
-       VALUES ($1, $2, 'open')
+      `INSERT INTO support_tickets (user_id, message, status, submitter_email, submitter_name)
+       VALUES ($1, $2, 'open', $3, $4)
        RETURNING id`,
-      [userId ?? null, message]
-    );
+      [userId, message, submitterEmail, submitterName]
+    ).catch(async (err) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("submitter_email") && msg.includes("does not exist")) {
+        return query<{ id: string }>(
+          `INSERT INTO support_tickets (user_id, message, status) VALUES ($1, $2, 'open') RETURNING id`,
+          [userId, message]
+        );
+      }
+      throw err;
+    });
 
     const row = insert.rows[0];
     if (!row) {

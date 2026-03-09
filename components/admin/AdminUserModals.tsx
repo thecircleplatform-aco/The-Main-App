@@ -208,7 +208,9 @@ function IpHistoryModal({
           {loading ? (
             <p className="py-8 text-center text-sm text-white/50">Loading…</p>
           ) : ips.length === 0 ? (
-            <p className="py-8 text-center text-sm text-white/50">No IP records</p>
+            <p className="py-8 text-center text-sm text-white/50">
+              No IP records yet. IPs are recorded when users log in or register.
+            </p>
           ) : (
             <table className="w-full text-xs">
               <thead>

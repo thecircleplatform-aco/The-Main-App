@@ -51,6 +51,9 @@ CREATE TABLE IF NOT EXISTS support_tickets (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS submitter_email text;
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS submitter_name text;
+
 CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_created ON support_tickets(created_at DESC);
