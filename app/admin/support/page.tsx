@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { GlassPanel } from "@/components/glass-panel";
 import { SupportTicketViewer } from "@/components/admin/SupportTicketViewer";
-import { query } from "@/lib/db";
+import { query } from "@/database/db";
 
 type Ticket = {
   id: string;
@@ -39,6 +40,14 @@ export default async function AdminSupportPage() {
         <h2 className="text-sm font-semibold text-white">Support</h2>
         <p className="mt-1 text-xs text-white/55">
           View support tickets from blocked users and respond or unblock.
+        </p>
+        <p className="mt-2">
+          <Link
+            href="/admin/support/password-recovery"
+            className="text-xs text-violet-400 hover:text-violet-300"
+          >
+            Password recovery requests →
+          </Link>
         </p>
       </GlassPanel>
 

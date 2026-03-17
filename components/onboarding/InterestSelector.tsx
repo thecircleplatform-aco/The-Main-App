@@ -49,11 +49,11 @@ export function InterestSelector({
               disabled={disabled}
               onClick={() => toggle(interest)}
               className={cn(
-                "rounded-2xl border px-4 py-2.5 text-sm font-medium transition-all",
-                "backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/25",
+                "rounded-2xl border px-4 py-2.5 text-sm font-medium transition-all backdrop-blur-xl",
+                "focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-white/25",
                 selected
-                  ? "border-white/25 bg-white/15 text-white shadow-soft"
-                  : "border-white/10 bg-white/5 text-white/80 hover:border-white/20 hover:bg-white/8 hover:text-white"
+                  ? "border-violet-400 bg-violet-100 text-violet-900 shadow-soft dark:border-white/25 dark:bg-white/15 dark:text-white"
+                  : "border-violet-200/80 bg-violet-50/50 text-violet-800 hover:border-violet-300 hover:bg-violet-100/80 hover:text-violet-900 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:border-white/20 dark:hover:bg-white/8 dark:hover:text-white"
               )}
             >
               {interest.charAt(0).toUpperCase() + interest.slice(1)}

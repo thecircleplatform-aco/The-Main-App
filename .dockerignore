@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+npm-debug.log*
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+.next
+out
+dist
+build
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Env (set via Fly secrets)
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# Docs / misc
+*.md
+!README.md
+
+# Mobile / native (not needed for web deploy)
+android
+ios
+capacitor.config.ts
+CAPACITOR.md
+
+# Tests / tooling
+coverage
+.nyc_output
+*.test.*
+*.spec.*
+
+# scripts/ is needed: prebuild runs scripts/inject-git.mjs

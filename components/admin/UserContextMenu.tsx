@@ -11,6 +11,8 @@ import {
   Globe,
   Activity,
   MoreVertical,
+  Smartphone,
+  PhoneOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +23,10 @@ export type UserRow = {
   status?: string | null;
   created_at: string;
   sessions: number;
+  provider?: string | null;
+  phone_number?: string | null;
+  phone_verified?: boolean | null;
+  phone_login_disabled?: boolean | null;
 };
 
 type UserContextMenuProps = {
@@ -32,17 +38,22 @@ type UserContextMenuProps = {
   onBlockUser: (user: UserRow) => void;
   onShadowBan: (user: UserRow) => void;
   onDeleteUser: (user: UserRow) => void;
+  onViewSessions?: (user: UserRow) => void;
   onViewIpHistory: (user: UserRow) => void;
   onViewActivity: (user: UserRow) => void;
+  onTogglePhoneLogin?: (user: UserRow) => void;
 };
 
-const menuItems: { key: string; label: string; icon: React.ComponentType<{ className?: string }>; destructive?: boolean }[] = [
+const menuItems: { key: string; label: string; icon: React.ComponentType<{ className?: string }>; destructive?: boolean; phoneOnly?: boolean }[] = [
   { key: "username", label: "Change username", icon: UserPen },
   { key: "email", label: "Change email", icon: Mail },
   { key: "password", label: "Reset password", icon: KeyRound },
   { key: "block", label: "Block user", icon: Ban, destructive: true },
   { key: "shadowBan", label: "Shadow ban", icon: Ban, destructive: true },
   { key: "delete", label: "Delete user", icon: Trash2, destructive: true },
+  { key: "phoneLogin", label: "Disable phone login", icon: PhoneOff, phoneOnly: true },
+  { key: "phoneLogin", label: "Enable phone login", icon: Smartphone, phoneOnly: true },
+  { key: "sessions", label: "Sessions", icon: Smartphone },
   { key: "ip", label: "View IP history", icon: Globe },
   { key: "activity", label: "View account activity", icon: Activity },
 ];
@@ -56,12 +67,17 @@ export function UserContextMenu({
   onBlockUser,
   onShadowBan,
   onDeleteUser,
+  onViewSessions,
   onViewIpHistory,
   onViewActivity,
+  onTogglePhoneLogin,
 }: UserContextMenuProps) {
   const [open, setOpen] = React.useState(false);
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
   const triggerRef = React.useRef<HTMLTableRowElement>(null);
+
+  const isPhoneUser = user.provider === "phone";
+  const phoneLoginDisabled = !!user.phone_login_disabled;
 
   const handlers: Record<string, (u: UserRow) => void> = {
     username: onEditUsername,
@@ -70,6 +86,8 @@ export function UserContextMenu({
     block: onBlockUser,
     shadowBan: onShadowBan,
     delete: onDeleteUser,
+    phoneLogin: onTogglePhoneLogin ?? (() => {}),
+    sessions: onViewSessions ?? (() => {}),
     ip: onViewIpHistory,
     activity: onViewActivity,
   };
@@ -135,25 +153,33 @@ export function UserContextMenu({
             style={{ left: position.x, top: position.y }}
             onClick={(e) => e.stopPropagation()}
           >
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={handleItemClick(item.key)}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition",
-                    item.destructive
-                      ? "text-rose-400 hover:bg-rose-500/20"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  {item.label}
-                </button>
-              );
-            })}
+            {menuItems
+              .filter((item) => {
+                if (item.phoneOnly) {
+                  if (!isPhoneUser || !onTogglePhoneLogin) return false;
+                  return item.label.includes(phoneLoginDisabled ? "Enable" : "Disable");
+                }
+                return true;
+              })
+              .map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={`${item.key}-${item.label}`}
+                    type="button"
+                    onClick={handleItemClick(item.key)}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition",
+                      item.destructive
+                        ? "text-rose-400 hover:bg-rose-500/20"
+                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    {item.label}
+                  </button>
+                );
+              })}
           </div>,
           document.body
         )}

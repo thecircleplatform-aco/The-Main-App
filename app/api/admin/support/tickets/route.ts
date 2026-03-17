@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
-import { requireAdmin } from "@/lib/admin";
-import { configErrorResponse } from "@/lib/configError";
+import { query } from "@/database/db";
+import { requireAdmin } from "@/services/admin";
+import { configErrorResponse } from "@/config/configError";
 
 type TicketRow = {
   id: string;

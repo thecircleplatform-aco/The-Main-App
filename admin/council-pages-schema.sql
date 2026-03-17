@@ -1,0 +1,2 @@
+-- Council and AI report tables have been removed from the project.
+-- Circle Community schema: database/schema/circle-schema.sql

@@ -20,7 +20,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-const schemaPath = path.join(__dirname, "..", "admin", "user-management-schema.sql");
+const schemaPath = path.join(__dirname, "..", "database", "schema", "user-management-schema.sql");
 
 async function main() {
   try {

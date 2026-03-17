@@ -1,6 +1,2 @@
-import { clsx, type ClassValue } from "clsx";
-
-export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
-}
-
+/** @deprecated Use @/core/utils */
+export { cn } from "@/core/utils";

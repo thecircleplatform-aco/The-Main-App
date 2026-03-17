@@ -13,7 +13,7 @@ export const GlassInput = React.forwardRef<HTMLInputElement, GlassInputProps>(
       <Input
         ref={ref}
         className={cn(
-          "rounded-2xl border-white/20 bg-white/6 shadow-soft backdrop-blur-2xl focus:ring-2 focus:ring-white/25",
+          "rounded-2xl border-gray-200 bg-gray-50 shadow-soft backdrop-blur-2xl focus:ring-2 focus:ring-gray-300 dark:border-white/20 dark:bg-white/6 dark:focus:ring-white/25",
           className
         )}
         {...props}

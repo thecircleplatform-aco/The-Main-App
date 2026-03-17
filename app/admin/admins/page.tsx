@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { GlassPanel } from "@/components/glass-panel";
-import { query } from "@/lib/db";
-import { getAdminSession, canManageAdmins } from "@/lib/admin";
+import { query } from "@/database/db";
+import { getAdminSession, canManageAdmins } from "@/services/admin";
 import { AdminAdminsManager } from "@/components/admin/AdminAdminsManager";
 
 type AdminRow = {

@@ -43,11 +43,11 @@ export function SupportChat() {
 
   return (
     <GlassPanel className="p-6">
-      <div className="flex items-center gap-2 text-white/80">
+      <div className="flex items-center gap-2 text-gray-800 dark:text-white/80">
         <MessageCircle className="h-5 w-5" />
         <h2 className="text-sm font-semibold">Contact Support</h2>
       </div>
-      <p className="mt-2 text-xs text-white/60">
+      <p className="mt-2 text-xs text-gray-600 dark:text-white/60">
         Submit a message and our team will review your case. Include your email
         if you&apos;re not logged in.
       </p>
@@ -71,7 +71,7 @@ export function SupportChat() {
               maxLength={2000}
               disabled={loading}
               required
-              className="h-24 w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 shadow-soft backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/15 disabled:opacity-50"
+              className="h-24 w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 shadow-soft backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40 dark:focus:ring-white/15"
             />
           </div>
           {error && (

@@ -1,10 +1,20 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.thecircleplatform.app"
+    namespace = "org.circle.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            storePassword 'password123'
+            keyAlias 'release-key'
+            keyPassword 'password123'
+        }
+    }
+
     defaultConfig {
-        applicationId "com.thecircleplatform.app"
+        applicationId "org.circle.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -18,10 +28,16 @@ android {
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+task generateKeystore(type: Exec) {
+    workingDir projectDir
+    commandLine 'keytool', '-genkey', '-v', '-keystore', 'release.keystore', '-alias', 'release-key', '-keyalg', 'RSA', '-keysize', '2048', '-validity', '10000', '-storepass', 'password123', '-keypass', 'password123', '-dname', 'CN=Circle, OU=App, O=Circle, L=Unknown, S=Unknown, C=US'
 }
 
 repositories {

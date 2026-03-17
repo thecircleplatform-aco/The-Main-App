@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Paperclip, Send, Mic, Square } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { takePhoto, pickFromGallery } from "@/lib/camera";
@@ -120,10 +119,12 @@ export function MessageInput({
 
   return (
     <div className="relative">
+      {/* Single chat input bubble: one rounded bar with everything inside */}
       <div
         className={cn(
-          "w-full flex items-center gap-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 transition-colors duration-200",
-          "focus-within:border-white/20 focus-within:bg-white/[0.06] focus-within:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]",
+          "message-input-bar flex w-full items-end gap-1.5 rounded-3xl px-2 py-2 transition-all duration-200 backdrop-blur-2xl sm:items-center sm:gap-2 sm:px-3 sm:py-2.5",
+          "bg-white/90 focus-within:bg-white/95",
+          "dark:bg-white/[0.08] dark:focus-within:bg-white/[0.12]",
           (disabled || isSubmitting) && "opacity-70"
         )}
       >
@@ -144,8 +145,7 @@ export function MessageInput({
             disabled={disabled || isSubmitting}
             aria-label="Attach file"
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/50 transition-all duration-150",
-              "hover:bg-white/10 hover:text-white/80",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#6c4dff]/70 transition-all duration-150 hover:bg-[#6c4dff]/10 hover:text-[#6c4dff] dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white/80 sm:h-8 sm:w-8",
               "disabled:pointer-events-none disabled:opacity-50"
             )}
           >
@@ -160,8 +160,8 @@ export function MessageInput({
             disabled={disabled || isSubmitting}
             aria-label={isListening ? "Stop listening" : "Voice input"}
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-150",
-              isListening ? "bg-rose-500/30 text-rose-300" : "text-white/50 hover:bg-white/10 hover:text-white/80",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8",
+              isListening ? "bg-rose-500/30 text-rose-600 dark:text-rose-300" : "text-[#6c4dff]/70 hover:bg-[#6c4dff]/10 hover:text-[#6c4dff] dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white/80",
               "disabled:pointer-events-none disabled:opacity-50"
             )}
           >
@@ -169,7 +169,7 @@ export function MessageInput({
           </button>
         )}
 
-        <Textarea
+        <textarea
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -177,8 +177,7 @@ export function MessageInput({
           placeholder={isListening ? "Listening…" : placeholder}
           rows={1}
           className={cn(
-            "min-h-[36px] max-h-24 min-w-0 flex-1 resize-none border-0 bg-transparent py-2 px-3 text-[13px] leading-[1.4] shadow-none outline-none focus:ring-0",
-            "placeholder:text-white/35"
+            "min-h-[40px] max-h-24 min-w-0 flex-1 resize-none border-0 bg-transparent py-2.5 px-3 text-[13px] leading-[1.4] text-[#1e1b4b] shadow-none outline-none focus:ring-0 placeholder:text-[#6c4dff]/50 dark:text-white dark:placeholder:text-white/35 sm:min-h-[36px] sm:py-2"
           )}
         />
 
@@ -188,10 +187,10 @@ export function MessageInput({
           disabled={!canSend}
           aria-label="Send message"
           className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-150",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8",
             canSend
-              ? "bg-white text-zinc-900 hover:bg-white/95 hover:shadow-sm"
-              : "bg-white/10 text-white/30 cursor-not-allowed"
+              ? "bg-gradient-to-r from-[#6c4dff] via-[#3fa9ff] to-[#34d399] text-white shadow-[0_4px_12px_-2px_rgba(108,77,255,0.4),0_2px_8px_-2px_rgba(52,211,153,0.2)] hover:shadow-[0_6px_20px_-4px_rgba(108,77,255,0.5),0_4px_12px_-2px_rgba(52,211,153,0.3)] dark:[background-image:none] dark:bg-white dark:text-zinc-900 dark:hover:bg-white/95 dark:shadow-none"
+              : "bg-[#6c4dff]/10 text-[#6c4dff]/40 cursor-not-allowed dark:bg-white/10 dark:text-white/30"
           )}
         >
           <Send className="h-4 w-4" aria-hidden strokeWidth={2} />
@@ -199,25 +198,25 @@ export function MessageInput({
       </div>
 
       {showAttachMenu && onAttach && (
-        <div className="absolute bottom-full left-0 mb-1 flex gap-1 rounded-xl border border-white/10 bg-black/95 p-1 shadow-xl backdrop-blur-xl">
+        <div className="absolute bottom-full left-0 mb-1 flex gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-black/95">
           <button
             type="button"
             onClick={handleTakePhoto}
-            className="rounded-lg px-3 py-2 text-xs text-white/80 hover:bg-white/10"
+            className="rounded-lg px-3 py-2 text-xs text-gray-800 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10"
           >
             Camera
           </button>
           <button
             type="button"
             onClick={handlePickGallery}
-            className="rounded-lg px-3 py-2 text-xs text-white/80 hover:bg-white/10"
+            className="rounded-lg px-3 py-2 text-xs text-gray-800 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10"
           >
             Gallery
           </button>
           <button
             type="button"
             onClick={handleFileInputClick}
-            className="rounded-lg px-3 py-2 text-xs text-white/80 hover:bg-white/10"
+            className="rounded-lg px-3 py-2 text-xs text-gray-800 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10"
           >
             Files
           </button>

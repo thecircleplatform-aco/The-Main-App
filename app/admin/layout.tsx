@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
-import { getAdminSession } from "@/lib/admin";
+import { getAdminSession } from "@/services/admin";
 import { AdminLayoutClient } from "@/components/admin/AdminLayoutClient";
 
 export const dynamic = "force-dynamic";
@@ -12,11 +11,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     redirect("/login?from=/admin");
   }
   return (
-    <GalaxyPageWrapper>
     <div className="min-h-dvh px-4 pb-16 pt-12 md:px-8">
       <AdminLayoutClient admin={admin}>{children}</AdminLayoutClient>
     </div>
-    </GalaxyPageWrapper>
   );
 }
 

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { query } from "@/lib/db";
-import { configErrorResponse } from "@/lib/configError";
-import { requireAdmin } from "@/lib/admin";
-import { hashPassword } from "@/lib/auth";
+import { query } from "@/database/db";
+import { configErrorResponse } from "@/config/configError";
+import { requireAdmin } from "@/services/admin";
+import { hashPassword } from "@/services/auth";
 
 type AdminRow = {
   id: string;

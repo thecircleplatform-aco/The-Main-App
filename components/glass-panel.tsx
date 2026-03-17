@@ -11,7 +11,7 @@ export function GlassPanel({ className, ...props }: GlassProps) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-white/10 bg-white/6 shadow-soft backdrop-blur-2xl",
+        "relative overflow-hidden rounded-3xl border border-violet-200/70 bg-white/95 shadow-soft backdrop-blur-2xl dark:border-white/10 dark:bg-white/6",
         className
       )}
       {...props}
@@ -26,7 +26,7 @@ export function GlassCard({ className, ...props }: GlassProps) {
   return (
     <div
       className={cn(
-        "relative rounded-2xl border border-white/12 bg-white/4 shadow-soft backdrop-blur-xl",
+        "relative rounded-2xl border border-cyan-200/60 bg-white/90 shadow-soft backdrop-blur-xl dark:border-white/12 dark:bg-white/4",
         className
       )}
       {...props}

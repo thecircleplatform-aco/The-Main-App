@@ -104,7 +104,7 @@ export function MessageActions({
         aria-label="Copy message"
         className={cn(
           "flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-          "text-white/60 hover:bg-white/10 hover:text-white/90"
+          "text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white/90"
         )}
       >
         <Copy className="h-3.5 w-3.5" />
@@ -119,7 +119,7 @@ export function MessageActions({
             aria-label="Feedback"
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-              "text-white/60 hover:bg-white/10 hover:text-white/90"
+              "text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white/90"
             )}
           >
             <ThumbsUp className="h-3.5 w-3.5" />
@@ -131,7 +131,7 @@ export function MessageActions({
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="absolute left-0 bottom-full z-10 mb-1 flex gap-0.5 rounded-lg border border-white/10 bg-black/90 p-0.5 backdrop-blur-2xl"
+                className="absolute left-0 bottom-full z-10 mb-1 flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5 shadow-lg backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
               >
                 <button
                   type="button"
@@ -140,7 +140,7 @@ export function MessageActions({
                     setShowFeedbackMenu(false);
                   }}
                   aria-label="Helpful"
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-white/80 transition-colors hover:bg-white/10"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-gray-700 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10"
                 >
                   <ThumbsUp className="h-3.5 w-3.5" />
                   Helpful
@@ -152,7 +152,7 @@ export function MessageActions({
                     setShowFeedbackMenu(false);
                   }}
                   aria-label="Not helpful"
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-white/80 transition-colors hover:bg-white/10"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-gray-700 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10"
                 >
                   <ThumbsDown className="h-3.5 w-3.5" />
                   Not helpful
@@ -162,7 +162,7 @@ export function MessageActions({
           </AnimatePresence>
         </div>
       ) : (
-        <span className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] text-white/40">
+        <span className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] text-gray-500 dark:text-white/40">
           {feedbackState === "helpful" ? (
             <><ThumbsUp className="h-3.5 w-3.5" /> Thanks!</>
           ) : (
@@ -177,7 +177,7 @@ export function MessageActions({
         aria-label="Share"
         className={cn(
           "flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors",
-          "text-white/60 hover:bg-white/10 hover:text-white/90"
+          "text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white/90"
         )}
       >
         <Share2 className="h-3.5 w-3.5" />

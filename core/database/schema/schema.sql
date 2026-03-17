@@ -1,0 +1,3 @@
+-- Minimal schema for Neon Postgres.
+-- Council tables have been removed. See circle-schema.sql for Circle Community tables.
+-- Authentication and core tables are created by scripts/seed.mjs.

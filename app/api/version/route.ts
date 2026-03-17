@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AI_MODEL_VERSION } from "@/lib/version";
+import { AI_MODEL_VERSION } from "@/config/version";
 import pkg from "../../../package.json";
 
 function getAppVersion(): string {

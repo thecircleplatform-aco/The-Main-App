@@ -64,7 +64,13 @@ export function DeleteAccountModal({
       }
       setStep("success");
       onSuccess?.();
-      await fetch("/api/auth/logout", { method: "POST" });
+      const logoutRes = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      const logoutData = await logoutRes.json().catch(() => ({}));
+      if (typeof localStorage !== "undefined") localStorage.removeItem("token");
+      if (typeof sessionStorage !== "undefined") sessionStorage.clear();
       window.location.href = "/login?deleted=1";
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to schedule deletion.");
@@ -118,8 +124,7 @@ export function DeleteAccountModal({
                     Delete your Circle account?
                   </h2>
                   <p className="text-sm text-white/70">
-                    This action cannot be undone. All your conversations, AI
-                    persona, and account data will be permanently deleted.
+                    This action cannot be undone. All your conversations and account data will be permanently deleted.
                   </p>
                   <div className="flex gap-2 pt-2">
                     <Button

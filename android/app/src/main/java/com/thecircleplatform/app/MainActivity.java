@@ -1,4 +1,4 @@
-package com.thecircleplatform.app;
+package org.circle.app;
 
 import com.getcapacitor.BridgeActivity;
 

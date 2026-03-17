@@ -9,8 +9,7 @@ import { GlassButton } from "@/components/ui/glass-button";
 import { GlassSelect } from "@/components/ui/glass-select";
 import { Textarea } from "@/components/ui/textarea";
 import { InterestSelector, type InterestValue } from "./InterestSelector";
-import { GalaxyFlyTransition } from "./GalaxyFlyTransition";
-import { COUNTRIES } from "@/lib/countries";
+import { COUNTRIES } from "@/config/countries";
 import { softSpring, panelFade } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
@@ -97,7 +96,6 @@ export function PersonaSetupForm() {
   };
 
   return (
-    <GalaxyFlyTransition active={flying} onComplete={handleComplete}>
       <AnimatePresence mode="wait">
         {!flying && (
           <motion.div
@@ -108,20 +106,20 @@ export function PersonaSetupForm() {
           >
             <GlassPanel className="overflow-hidden p-6 shadow-xl sm:p-8">
               <div className="mb-6 flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-white">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Create Your AI Persona
                 </h1>
                 <span
-                  className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80"
+                  className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-800 dark:bg-white/10 dark:text-white/80"
                   aria-live="polite"
                 >
                   Step {step} of {TOTAL_STEPS}
                 </span>
               </div>
 
-              <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
                 <motion.div
-                  className="h-full rounded-full bg-white/30"
+                  className="h-full rounded-full bg-gray-600 dark:bg-white/30"
                   initial={false}
                   animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
                   transition={softSpring}
@@ -142,7 +140,7 @@ export function PersonaSetupForm() {
                     <div>
                       <label
                         htmlFor="persona-nickname"
-                        className="mb-1.5 block text-xs font-medium text-white/70"
+                        className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70"
                       >
                         Nickname <span className="text-rose-400">*</span>
                       </label>
@@ -161,7 +159,7 @@ export function PersonaSetupForm() {
                       <div>
                         <label
                           htmlFor="persona-gender"
-                          className="mb-1.5 block text-xs font-medium text-white/70"
+                          className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70"
                         >
                           Gender
                         </label>
@@ -176,7 +174,7 @@ export function PersonaSetupForm() {
                       <div>
                         <label
                           htmlFor="persona-birthday"
-                          className="mb-1.5 block text-xs font-medium text-white/70"
+                          className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70"
                         >
                           Birthday
                         </label>
@@ -193,7 +191,7 @@ export function PersonaSetupForm() {
                     <div>
                       <label
                         htmlFor="persona-country"
-                        className="mb-1.5 block text-xs font-medium text-white/70"
+                        className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70"
                       >
                         Country
                       </label>
@@ -207,10 +205,10 @@ export function PersonaSetupForm() {
                     </div>
 
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-white/70">
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70">
                         Main interests <span className="text-rose-400">*</span>
                       </label>
-                      <p className="mb-2 text-xs text-white/50">
+                      <p className="mb-2 text-xs text-gray-500 dark:text-white/50">
                         Select at least one to personalize your assistant.
                       </p>
                       <InterestSelector value={interests} onChange={setInterests} />
@@ -219,7 +217,7 @@ export function PersonaSetupForm() {
                     <div>
                       <label
                         htmlFor="persona-goals"
-                        className="mb-1.5 block text-xs font-medium text-white/70"
+                        className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70"
                       >
                         Main goals
                       </label>
@@ -229,7 +227,7 @@ export function PersonaSetupForm() {
                         value={goals}
                         onChange={(e) => setGoals(e.target.value)}
                         rows={3}
-                        className="rounded-2xl border-white/20 bg-white/6 backdrop-blur-xl placeholder:text-white/40"
+                        className="rounded-2xl border-gray-200 bg-gray-50 backdrop-blur-xl placeholder:text-gray-400 dark:border-white/20 dark:bg-white/6 dark:placeholder:text-white/40"
                       />
                     </div>
 
@@ -256,7 +254,7 @@ export function PersonaSetupForm() {
                     className="space-y-5 pt-4"
                   >
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-white/70">
+                      <label className="mb-1.5 block text-xs font-medium text-gray-700 dark:text-white/70">
                         Preferred AI personality
                       </label>
                       <div className="space-y-2">
@@ -266,8 +264,8 @@ export function PersonaSetupForm() {
                             className={cn(
                               "flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 transition-colors",
                               aiPersonality === opt.value
-                                ? "border-white/25 bg-white/10"
-                                : "border-white/10 bg-white/5 hover:bg-white/[0.07]"
+                                ? "border-gray-300 bg-gray-200 dark:border-white/25 dark:bg-white/10"
+                                : "border-gray-200 bg-gray-50 hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/[0.07]"
                             )}
                           >
                             <input
@@ -276,21 +274,21 @@ export function PersonaSetupForm() {
                               value={opt.value}
                               checked={aiPersonality === opt.value}
                               onChange={() => setAiPersonality(opt.value)}
-                              className="h-4 w-4 border-white/30 bg-white/5 text-white focus:ring-white/25"
+                              className="h-4 w-4 border-gray-300 bg-gray-100 text-gray-900 focus:ring-gray-400 dark:border-white/30 dark:bg-white/5 dark:text-white dark:focus:ring-white/25"
                             />
-                            <span className="text-sm text-white">{opt.label}</span>
+                            <span className="text-sm text-gray-900 dark:text-white">{opt.label}</span>
                           </label>
                         ))}
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
                       <div className="flex items-center justify-between gap-4">
                         <div>
-                          <p className="text-sm font-medium text-white">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
                             Share ideas in the Circle Idea Bank
                           </p>
-                          <p className="mt-0.5 text-xs text-white/50">
+                          <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
                             Allow my ideas to be shared anonymously in the Circle
                             Idea Bank.
                           </p>
@@ -301,15 +299,15 @@ export function PersonaSetupForm() {
                           aria-checked={ideaSharingEnabled}
                           onClick={() => setIdeaSharingEnabled((v) => !v)}
                           className={cn(
-                            "relative h-7 w-12 shrink-0 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-white/25",
+                            "relative h-7 w-12 shrink-0 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-white/25",
                             ideaSharingEnabled
-                              ? "border-white/30 bg-white/20"
-                              : "border-white/15 bg-white/5"
+                              ? "border-gray-400 bg-gray-300 dark:border-white/30 dark:bg-white/20"
+                              : "border-gray-200 bg-gray-100 dark:border-white/15 dark:bg-white/5"
                           )}
                         >
                           <span
                             className={cn(
-                              "absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform",
+                              "absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform dark:bg-white",
                               ideaSharingEnabled && "translate-x-5"
                             )}
                           />
@@ -342,6 +340,5 @@ export function PersonaSetupForm() {
           </motion.div>
         )}
       </AnimatePresence>
-    </GalaxyFlyTransition>
   );
 }

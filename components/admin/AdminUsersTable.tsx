@@ -8,6 +8,7 @@ import {
   ConfirmModal,
   IpHistoryModal,
   ActivityModal,
+  UserSessionsModal,
 } from "./AdminUserModals";
 
 type AdminUsersTableProps = {
@@ -25,6 +26,12 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
   const [deleteUser, setDeleteUser] = React.useState<UserRow | null>(null);
   const [ipHistoryUser, setIpHistoryUser] = React.useState<UserRow | null>(null);
   const [activityUser, setActivityUser] = React.useState<UserRow | null>(null);
+  const [sessionsUser, setSessionsUser] = React.useState<UserRow | null>(null);
+  const [userSessions, setUserSessions] = React.useState<
+    { id: string; deviceName: string; ipAddress?: string; createdAt: string; lastActive: string; revoked: boolean }[]
+  >([]);
+  const [loadingUserSessions, setLoadingUserSessions] = React.useState(false);
+  const [togglePhoneUser, setTogglePhoneUser] = React.useState<UserRow | null>(null);
   const [ips, setIps] = React.useState<{ ip_address: string; device_id: string | null; created_at: string }[]>([]);
   const [activity, setActivity] = React.useState<{
     sessions: { id: string; created_at: string }[];
@@ -133,6 +140,48 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
     }
   };
 
+  const handleOpenSessions = async (user: UserRow) => {
+    setSessionsUser(user);
+    setLoadingUserSessions(true);
+    setUserSessions([]);
+    try {
+      const res = await fetch(`/api/admin/user/user-sessions?userId=${user.id}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setUserSessions(data.sessions ?? []);
+    } catch {
+      setUserSessions([]);
+    } finally {
+      setLoadingUserSessions(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId: string) => {
+    if (!sessionsUser) return;
+    const res = await fetch("/api/admin/user/revoke-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: sessionsUser.id, sessionId }),
+    });
+    if (!res.ok) return;
+    setUserSessions((prev) =>
+      prev.map((s) => (s.id === sessionId ? { ...s, revoked: true } : s))
+    );
+  };
+
+  const handleTogglePhoneLogin = async () => {
+    if (!togglePhoneUser) return;
+    const disabled = !togglePhoneUser.phone_login_disabled;
+    const res = await fetch("/api/admin/user/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: togglePhoneUser.id, phone_login_disabled: disabled }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? "Update failed");
+    setTogglePhoneUser(null);
+    refresh();
+  };
+
   const isBlocked = (u: UserRow) =>
     u.status === "blocked" || u.status === "shadow_banned";
   const isShadowBanned = (u: UserRow) => u.status === "shadow_banned";
@@ -146,6 +195,9 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
               <th className="px-3 py-2 text-left font-medium text-white/60">Email</th>
               <th className="px-3 py-2 text-left font-medium text-white/60">Name</th>
               <th className="px-3 py-2 text-left font-medium text-white/60">Status</th>
+              <th className="px-3 py-2 text-left font-medium text-white/60">Provider</th>
+              <th className="px-3 py-2 text-left font-medium text-white/60">Phone</th>
+              <th className="px-3 py-2 text-left font-medium text-white/60">Phone verified</th>
               <th className="px-3 py-2 text-left font-medium text-white/60">Sessions</th>
               <th className="px-3 py-2 text-left font-medium text-white/60">Joined</th>
               <th className="w-10 px-2 py-2" />
@@ -155,7 +207,7 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
             {users.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={9}
                   className="px-3 py-8 text-center text-xs text-white/50"
                 >
                   No users yet.
@@ -176,6 +228,8 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
                   onBlockUser={(user) => setBlockUser(user)}
                   onShadowBan={(user) => setShadowBanUser(user)}
                   onDeleteUser={(user) => setDeleteUser(user)}
+                  onTogglePhoneLogin={u.provider === "phone" ? (user) => setTogglePhoneUser(user) : undefined}
+                  onViewSessions={handleOpenSessions}
                   onViewIpHistory={handleOpenIpHistory}
                   onViewActivity={handleOpenActivity}
                 >
@@ -196,6 +250,23 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
                       </span>
                     ) : (
                       <span className="text-white/50">active</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 align-middle text-white/60">
+                    {u.provider === "google" ? "google" : u.provider === "github" ? "github" : u.provider === "phone" ? "phone" : "email"}
+                  </td>
+                  <td className="px-3 py-2 align-middle text-white/70">
+                    {u.phone_number ?? <span className="text-white/40">—</span>}
+                  </td>
+                  <td className="px-3 py-2 align-middle">
+                    {u.phone_number != null ? (
+                      u.phone_verified ? (
+                        <span className="text-emerald-400">yes</span>
+                      ) : (
+                        <span className="text-white/50">no</span>
+                      )
+                    ) : (
+                      <span className="text-white/40">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2 align-middle">{u.sessions}</td>
@@ -270,6 +341,27 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         confirmLabel="Delete"
       />
 
+      <ConfirmModal
+        open={!!togglePhoneUser}
+        onClose={() => setTogglePhoneUser(null)}
+        onConfirm={handleTogglePhoneLogin}
+        title={
+          togglePhoneUser?.phone_login_disabled
+            ? "Enable phone login"
+            : "Disable phone login"
+        }
+        message={
+          togglePhoneUser
+            ? togglePhoneUser.phone_login_disabled
+              ? `Enable phone login for ${togglePhoneUser.phone_number ?? togglePhoneUser.email}?`
+              : `Disable phone login for ${togglePhoneUser.phone_number ?? togglePhoneUser.email}? They will need to use another sign-in method.`
+            : ""
+        }
+        confirmLabel={
+          togglePhoneUser?.phone_login_disabled ? "Enable" : "Disable"
+        }
+      />
+
       <IpHistoryModal
         open={!!ipHistoryUser}
         onClose={() => setIpHistoryUser(null)}
@@ -284,6 +376,15 @@ export function AdminUsersTable({ users }: AdminUsersTableProps) {
         user={activityUser}
         activity={activity}
         loading={loadingActivity}
+      />
+
+      <UserSessionsModal
+        open={!!sessionsUser}
+        onClose={() => setSessionsUser(null)}
+        user={sessionsUser}
+        sessions={userSessions}
+        loading={loadingUserSessions}
+        onRevoke={handleRevokeSession}
       />
     </>
   );

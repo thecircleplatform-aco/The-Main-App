@@ -1,0 +1,73 @@
+<svg width="2048" height="2048" viewBox="0 0 2048 2048" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Minimal geometric network pattern for Circle chat
+    - White nodes and lines at very low opacity so it stays subtle
+    - Designed to tile seamlessly when repeated
+  -->
+  <defs>
+    <g id="node" fill="white" fill-opacity="0.09">
+      <circle r="5" />
+    </g>
+    <g id="segment" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+  </defs>
+
+  <!-- Main diagonal network -->
+  <g transform="translate(0,0)">
+    <!-- Nodes -->
+    <g transform="translate(220,260)"><use href="#node" /></g>
+    <g transform="translate(520,520)"><use href="#node" /></g>
+    <g transform="translate(900,360)"><use href="#node" /></g>
+    <g transform="translate(1320,640)"><use href="#node" /></g>
+    <g transform="translate(1700,420)"><use href="#node" /></g>
+
+    <!-- Connections -->
+    <path d="M220 260 L520 520" class="segment" />
+    <path d="M520 520 L900 360" class="segment" />
+    <path d="M900 360 L1320 640" class="segment" />
+    <path d="M1320 640 L1700 420" class="segment" />
+  </g>
+
+  <!-- Upper-right cluster -->
+  <g>
+    <g transform="translate(1560,180)"><use href="#node" /></g>
+    <g transform="translate(1840,260)"><use href="#node" /></g>
+    <g transform="translate(1760,520)"><use href="#node" /></g>
+
+    <path d="M1560 180 L1840 260" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+    <path d="M1840 260 L1760 520" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+  </g>
+
+  <!-- Lower-left cluster -->
+  <g>
+    <g transform="translate(260,1480)"><use href="#node" /></g>
+    <g transform="translate(520,1700)"><use href="#node" /></g>
+    <g transform="translate(180,1840)"><use href="#node" /></g>
+
+    <path d="M260 1480 L520 1700" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+    <path d="M260 1480 L180 1840" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+  </g>
+
+  <!-- Center-right vertical motif -->
+  <g>
+    <g transform="translate(1640,1080)"><use href="#node" /></g>
+    <g transform="translate(1840,1240)"><use href="#node" /></g>
+    <g transform="translate(1760,1480)"><use href="#node" /></g>
+
+    <path d="M1640 1080 L1840 1240" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+    <path d="M1840 1240 L1760 1480" stroke="white" stroke-width="1" stroke-opacity="0.08" stroke-linecap="round" />
+  </g>
+
+  <!-- Soft cross-diagonal connections -->
+  <g stroke="white" stroke-width="1" stroke-opacity="0.06" stroke-linecap="round">
+    <path d="M520 520 L260 1480" />
+    <path d="M900 360 L1640 1080" />
+    <path d="M1320 640 L520 1700" />
+  </g>
+
+  <!-- Edge connections to ensure seamless tiling:
+       Elements that touch one edge are conceptually continued on the opposite edge
+       so repetition in both directions looks continuous.
+       (Lines are kept away from hard edges; nodes act as soft continuity points.)
+  -->
+
+</svg>

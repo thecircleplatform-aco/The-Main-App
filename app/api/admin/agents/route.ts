@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { query } from "@/lib/db";
-import { configErrorResponse } from "@/lib/configError";
-import { requireAdmin } from "@/lib/admin";
+import { query } from "@/database/db";
+import { configErrorResponse } from "@/config/configError";
+import { requireAdmin } from "@/services/admin";
 
 const agentBodySchema = z.object({
   name: z.string().min(2),

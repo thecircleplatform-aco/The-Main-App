@@ -1,0 +1,74 @@
+.interactive-grid-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  /* Dark mode (default) - subtle blue grid, brand-consistent */
+  background-color: #020617;
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Light mode - neutral surface, subtle blue grid */
+html:not(.dark) .interactive-grid-bg {
+  background-color: #F8FAFC;
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.interactive-bg-icon {
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+  cursor: grab;
+  animation: interactive-icon-float 16s ease-in-out infinite alternate;
+}
+
+.interactive-bg-icon:hover {
+  filter:
+    drop-shadow(0 0 12px rgba(56, 189, 248, 0.75))
+    drop-shadow(0 0 20px rgba(129, 140, 248, 0.65));
+  opacity: 1 !important;
+}
+
+/* Reduced ambient glow - keeps background calm */
+.interactive-grid-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.12), transparent 55%),
+    radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.08), transparent 50%);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+html:not(.dark) .interactive-grid-bg::before {
+  background:
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.06), transparent 55%),
+    radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.04), transparent 50%);
+  opacity: 0.6;
+}
+
+@keyframes interactive-icon-float {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(0, -12px, 0) scale(1.02);
+  }
+  50% {
+    transform: translate3d(6px, -6px, 0) scale(1.03);
+  }
+  75% {
+    transform: translate3d(-4px, 6px, 0) scale(1.01);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.02);
+  }
+}

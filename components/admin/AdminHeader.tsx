@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import type { AdminSession } from "@/lib/admin";
+import { performLogout } from "@/lib/logout";
+import type { AdminSession } from "@/services/admin";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export function AdminHeader({ admin }: { admin: AdminSession }) {
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/login?from=/admin";
+    await performLogout();
   }
 
   return (

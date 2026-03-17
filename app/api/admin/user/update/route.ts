@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { query } from "@/lib/db";
-import { hashPassword } from "@/lib/auth";
-import { requireAdmin } from "@/lib/admin";
-import { configErrorResponse } from "@/lib/configError";
+import { query } from "@/database/db";
+import { hashPassword } from "@/services/auth";
+import { requireAdmin } from "@/services/admin";
+import { configErrorResponse } from "@/config/configError";
 import { getClientIp } from "@/lib/request-utils";
 
 const bodySchema = z.object({
@@ -11,6 +11,7 @@ const bodySchema = z.object({
   username: z.string().max(120).optional(),
   email: z.string().email().optional(),
   password: z.string().min(8).optional(),
+  phone_login_disabled: z.boolean().optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -25,7 +26,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    const { userId, username, email, password } = parsed.data;
+    const { userId, username, email, password, phone_login_disabled } = parsed.data;
 
     const existing = await query<{ id: string }>(
       "SELECT id FROM users WHERE id = $1",
@@ -62,6 +63,10 @@ export async function PATCH(request: Request) {
       const hashed = await hashPassword(password);
       updates.push(`password_hash = $${paramIdx++}`);
       params.push(hashed);
+    }
+    if (phone_login_disabled !== undefined) {
+      updates.push(`phone_login_disabled = $${paramIdx++}`);
+      params.push(phone_login_disabled);
     }
 
     if (updates.length === 0) {

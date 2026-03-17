@@ -1,5 +1,8 @@
 @import "tailwindcss";
-@import "../styles/glass.css";
+@import "../ui/styles/glass.css";
+
+/* Class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
@@ -8,12 +11,28 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light dark;
+    --color-bg-page: #f8f7ff;
+    --color-text-primary: #1e1b4b;
+    --color-text-muted: #4c4a6a;
+    --color-border: rgba(124, 58, 237, 0.12);
+    --color-bg-card: rgba(255, 255, 255, 0.95);
+    --color-accent: 124 58 237;
+  }
+
+  .dark {
+    --color-bg-page: #000000;
+    --color-text-primary: #ffffff;
+    --color-text-muted: rgba(255, 255, 255, 0.6);
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-bg-card: rgba(255, 255, 255, 0.05);
   }
 
   html,
   body {
     height: 100%;
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
   }
 }
 
@@ -41,5 +60,186 @@
       0 0 35px rgba(124, 58, 237, 0.18),
       0 0 25px rgba(34, 211, 238, 0.12);
   }
+
+  /* Brand shadow: #6c4dff, #3fa9ff, #34d399 - prominent for light theme */
+  .shadow-brand {
+    box-shadow:
+      0 12px 40px -8px rgba(108, 77, 255, 0.4),
+      0 6px 20px -4px rgba(63, 169, 255, 0.25),
+      0 4px 12px -2px rgba(52, 211, 153, 0.2),
+      0 0 0 1px rgba(108, 77, 255, 0.15);
+  }
+
+  .shadow-brand-bubble {
+    box-shadow:
+      0 10px 32px -6px rgba(108, 77, 255, 0.35),
+      0 6px 16px -2px rgba(52, 211, 153, 0.2),
+      0 0 0 1px rgba(63, 169, 255, 0.12);
+  }
+
+  .chat-bubble-in {
+    animation: chat-bubble-in 0.18s ease-out;
+  }
+
+  .circle-chat-bg {
+    position: relative;
+    isolation: isolate;
+    /* base depth gradient */
+    background:
+      /* edge fade overlay so grid disappears near top/bottom */
+      linear-gradient(
+        to bottom,
+        rgba(7, 12, 22, 0.9) 0%,
+        rgba(7, 12, 22, 0.4) 30%,
+        rgba(7, 12, 22, 0.4) 70%,
+        rgba(7, 12, 22, 0.9) 100%
+      ),
+      /* blue-tinted grid */
+      linear-gradient(rgba(120, 170, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120, 170, 255, 0.08) 1px, transparent 1px),
+      /* dark vertical depth gradient */
+      linear-gradient(180deg, #0f172a 0%, #0b1220 40%, #070c16 100%);
+    background-size: auto, 50px 50px, 50px 50px, auto;
+    background-repeat: repeat;
+    background-attachment: fixed;
+    backdrop-filter: blur(18px) saturate(125%);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
+  }
+}
+
+/* Message input: glowing shadow cycles through brand colors when focused */
+@keyframes message-input-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 14px 44px -8px rgba(108, 77, 255, 0.5),
+      0 6px 20px -4px rgba(63, 169, 255, 0.2),
+      0 4px 12px -2px rgba(52, 211, 153, 0.15);
+  }
+  33% {
+    box-shadow:
+      0 12px 40px -8px rgba(108, 77, 255, 0.25),
+      0 8px 28px -4px rgba(63, 169, 255, 0.45),
+      0 4px 12px -2px rgba(52, 211, 153, 0.2);
+  }
+  66% {
+    box-shadow:
+      0 12px 40px -8px rgba(108, 77, 255, 0.2),
+      0 6px 20px -4px rgba(63, 169, 255, 0.25),
+      0 8px 24px -2px rgba(52, 211, 153, 0.45);
+  }
+}
+
+.message-input-bar {
+  box-shadow:
+    0 12px 40px -8px rgba(108, 77, 255, 0.4),
+    0 6px 20px -4px rgba(63, 169, 255, 0.25),
+    0 4px 12px -2px rgba(52, 211, 153, 0.2);
+}
+
+.message-input-bar:focus-within {
+  animation: message-input-glow 3s ease-in-out infinite;
+}
+
+@keyframes chat-bubble-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Council report page styles */
+.council-report-article {
+  @apply space-y-8;
+}
+
+.council-report-article .council-report-header {
+  @apply mb-8 border-b border-violet-200/70 pb-6 dark:border-white/10;
+}
+
+.council-report-article .council-report-title {
+  @apply text-3xl font-bold tracking-tight text-violet-950 md:text-4xl dark:text-white;
+}
+
+.council-report-article .council-report-section {
+  @apply rounded-2xl border border-violet-200/60 bg-violet-50/70 p-6 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+}
+
+.council-report-article .council-report-section-title {
+  @apply mb-3 text-sm font-semibold uppercase tracking-wide text-violet-800 dark:text-white/70;
+}
+
+.council-report-article .council-report-text {
+  @apply leading-relaxed text-violet-900 dark:text-white/80;
+}
+
+.council-report-article .council-report-list {
+  @apply ml-4 space-y-2 text-violet-900 dark:text-white/80;
+}
+
+.council-report-article .council-report-list li {
+  @apply leading-relaxed;
+}
+
+.council-report-article .council-report-ordered {
+  @apply list-decimal;
+}
+
+.council-report-article .council-report-table-wrap {
+  @apply overflow-x-auto rounded-xl border border-cyan-200/70 dark:border-white/10;
+}
+
+.council-report-article .council-report-table {
+  @apply w-full border-collapse text-sm;
+}
+
+.council-report-article .council-report-table th,
+.council-report-article .council-report-table td {
+  @apply border-b border-violet-200/60 px-4 py-3 text-left text-violet-900 dark:border-white/10 dark:text-white/80;
+}
+
+.council-report-article .council-report-table th {
+  @apply bg-violet-50/80 font-semibold text-violet-900 dark:bg-white/5 dark:text-white/90;
+}
+
+.council-report-article .council-report-recommendation {
+  @apply border-violet-500/30 bg-violet-500/10;
+}
+
+.council-report-article .council-report-recommendation-content {
+  @apply rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 text-gray-900 dark:text-white/90;
+}
+
+.council-report-article .council-report-recommendation-content p {
+  @apply mb-3 last:mb-0 leading-relaxed;
+}
+
+.council-report-article .council-report-attribution {
+  @apply mt-2 text-xs italic text-violet-700 dark:text-white/60;
+}
+
+.council-report-article .council-report-sources {
+  @apply list-disc text-sm text-violet-700 dark:text-white/60;
+}
+
+/* Auth pages: ensure header text is readable (gray-900 in light, white in dark) */
+.auth-page-header {
+  opacity: 1 !important;
+}
+.auth-page-header h1 {
+  opacity: 1 !important;
+}
+.auth-page-header p {
+  opacity: 1 !important;
+}
+.dark .auth-page-header h1 {
+  color: #ffffff !important;
+}
+.dark .auth-page-header p {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 

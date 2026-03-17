@@ -15,8 +15,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { GlassPanel } from "@/components/glass-panel";
-import { GalaxyPageWrapper } from "@/components/GalaxyPageWrapper";
-import { releases, type ReleaseFeature } from "@/lib/changelog";
+import { releases, type ReleaseFeature } from "@/config/changelog";
 import { useVersion } from "@/components/VersionDisplay";
 import { fadeInUp, softSpring } from "@/lib/animations";
 
@@ -69,7 +68,6 @@ export default function ChangelogPage() {
   const version = useVersion();
 
   return (
-    <GalaxyPageWrapper>
     <div className="min-h-dvh px-4 pb-24 pt-14 md:px-8">
       <div className="mx-auto max-w-3xl">
         <motion.div
@@ -80,7 +78,7 @@ export default function ChangelogPage() {
         >
           <Link
             href="/settings"
-            className="inline-flex items-center gap-2 text-xs font-medium text-white/60 transition-colors hover:text-white"
+            className="inline-flex items-center gap-2 text-xs font-medium text-violet-600 transition-colors hover:text-violet-700 dark:text-white/60 dark:hover:text-white"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Settings
@@ -94,16 +92,16 @@ export default function ChangelogPage() {
           transition={softSpring}
           className="mb-12"
         >
-          <h1 className="text-2xl font-bold text-white md:text-3xl">
+          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl dark:text-white">
             What&apos;s new
           </h1>
-          <p className="mt-2 text-sm text-white/60">
+          <p className="mt-2 text-sm text-gray-600 dark:text-white/60">
             Features and improvements by version. You&apos;re on{" "}
-            <span className="font-medium text-white/80">
+            <span className="font-medium text-gray-800 dark:text-white/80">
               v{version?.appVersion ?? "—"}
             </span>
             {version?.gitVersion && (
-              <span className="ml-1 font-mono text-white/50">
+              <span className="ml-1 font-mono text-gray-500 dark:text-white/50">
                 ({version.gitVersion})
               </span>
             )}
@@ -130,13 +128,13 @@ export default function ChangelogPage() {
                   <span className=" rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-sm font-semibold text-violet-300">
                     v{release.version}
                   </span>
-                  <span className=" rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/70">
+                  <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
                     <span className="inline-flex items-center gap-1">
                       <Cpu className="h-3 w-3 text-cyan-400" />
                       {release.aiVersion}
                     </span>
                   </span>
-                  <span className="text-[11px] text-white/40">{release.date}</span>
+                  <span className="text-[11px] text-gray-500 dark:text-white/40">{release.date}</span>
                 </div>
 
                 <motion.ul
@@ -157,20 +155,20 @@ export default function ChangelogPage() {
                         className="flex gap-4"
                       >
                         <motion.div
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/5"
                           whileHover={{
                             scale: 1.05,
                             backgroundColor: "rgba(255,255,255,0.08)",
                           }}
                           transition={softSpring}
                         >
-                          <Icon className="h-4 w-4 text-white/70" />
+                          <Icon className="h-4 w-4 text-gray-600 dark:text-white/70" />
                         </motion.div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-semibold text-white">
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                             {feature.title}
                           </h3>
-                          <p className="mt-0.5 text-xs leading-relaxed text-white/60">
+                          <p className="mt-0.5 text-xs leading-relaxed text-gray-600 dark:text-white/60">
                             {feature.description}
                           </p>
                         </div>
@@ -189,12 +187,11 @@ export default function ChangelogPage() {
           transition={{ delay: 0.6, duration: 0.4 }}
           className="mt-12 text-center"
         >
-          <p className="text-[11px] text-white/40">
-            Built with Circle · powered by Lumana
+          <p className="text-[11px] text-gray-500 dark:text-white/40">
+            Built with Circle
           </p>
         </motion.div>
       </div>
     </div>
-    </GalaxyPageWrapper>
   );
 }

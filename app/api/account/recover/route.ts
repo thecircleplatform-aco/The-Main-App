@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
-import { getSession } from "@/lib/auth";
-import { configErrorResponse } from "@/lib/configError";
+import { query } from "@/database/db";
+import { getSession } from "@/services/auth";
+import { configErrorResponse } from "@/config/configError";
 
 export async function POST() {
   try {

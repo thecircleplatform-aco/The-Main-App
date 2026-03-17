@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { query } from "@/lib/db";
-import { configErrorResponse } from "@/lib/configError";
+import { getSession } from "@/services/auth";
+import { query } from "@/database/db";
+import { configErrorResponse } from "@/config/configError";
 
 const ALLOWED_INTERESTS = [
   "technology",

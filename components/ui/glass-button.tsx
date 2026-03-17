@@ -16,7 +16,7 @@ export const GlassButton = React.forwardRef<
     <Button
       ref={ref}
       className={cn(
-        "rounded-2xl bg-white/12 text-white shadow-glow hover:bg-white/18 active:scale-[0.99]",
+        "rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 text-white shadow-glow hover:from-violet-700 hover:to-cyan-600 active:scale-[0.99] dark:[background-image:none] dark:bg-white/12 dark:hover:bg-white/18",
         className
       )}
       {...props}

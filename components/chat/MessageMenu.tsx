@@ -43,8 +43,7 @@ export function MessageMenu({
         aria-label="More options"
         aria-expanded={open}
         className={cn(
-          "flex h-7 w-7 items-center justify-center rounded-lg text-white/50 transition-colors",
-          "hover:bg-white/10 hover:text-white/80"
+          "flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white/80"
         )}
       >
         <MoreHorizontal className="h-4 w-4" />
@@ -57,7 +56,7 @@ export function MessageMenu({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96 }}
             transition={{ duration: 0.12 }}
-            className="absolute right-0 top-full z-10 mt-1 min-w-[160px] overflow-hidden rounded-xl border border-white/10 bg-black/90 py-1 shadow-xl backdrop-blur-2xl"
+            className="absolute right-0 top-full z-10 mt-1 min-w-[160px] overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
           >
             {onSave && (
               <button
@@ -66,9 +65,9 @@ export function MessageMenu({
                   onSave();
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <Bookmark className="h-4 w-4 text-white/60" />
+                <Bookmark className="h-4 w-4 text-gray-500 dark:text-white/60" />
                 Save message
               </button>
             )}
@@ -79,9 +78,9 @@ export function MessageMenu({
                   onReport();
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <Flag className="h-4 w-4 text-white/60" />
+                <Flag className="h-4 w-4 text-gray-500 dark:text-white/60" />
                 Report issue
               </button>
             )}
@@ -92,9 +91,9 @@ export function MessageMenu({
                   onHide();
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-800 transition-colors hover:bg-gray-100 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <EyeOff className="h-4 w-4 text-white/60" />
+                <EyeOff className="h-4 w-4 text-gray-500 dark:text-white/60" />
                 Hide message
               </button>
             )}

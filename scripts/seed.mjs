@@ -52,6 +52,18 @@ async function runMigrations() {
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_scheduled_at timestamptz;
   `);
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 1;
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_users_session_version ON users(session_version);
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
+  `);
+  await pool.query(`
+    UPDATE users SET session_version = COALESCE(session_version, 1) WHERE session_version IS NULL;
+  `);
 
   // ACCOUNT_DELETIONS
   await pool.query(`
@@ -100,32 +112,7 @@ async function runMigrations() {
     );
   `);
 
-  // AI_DISCUSSIONS
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS ai_discussions (
-      id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      session_id  uuid REFERENCES sessions(id) ON DELETE CASCADE,
-      user_id     uuid REFERENCES users(id) ON DELETE SET NULL,
-      agent_id    uuid REFERENCES agents(id) ON DELETE SET NULL,
-      topic       text NOT NULL,
-      agent_name  text NOT NULL,
-      message     text NOT NULL,
-      created_at  timestamptz NOT NULL DEFAULT now()
-    );
-  `);
-
-  // INSIGHTS
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS insights (
-      id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      title       text NOT NULL,
-      summary     text NOT NULL,
-      created_at  timestamptz NOT NULL DEFAULT now()
-    );
-  `);
-
-  // PERSONAS (per-user AI persona from onboarding)
+  // PERSONAS (per-user profile from onboarding)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS personas (
       id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -205,24 +192,157 @@ async function runMigrations() {
     CREATE INDEX IF NOT EXISTS idx_messages_agent_id
       ON messages (agent_id);
 
-    CREATE INDEX IF NOT EXISTS idx_ai_discussions_session_created
-      ON ai_discussions (session_id, created_at);
-
-    CREATE INDEX IF NOT EXISTS idx_ai_discussions_user_id
-      ON ai_discussions (user_id);
-
-    CREATE INDEX IF NOT EXISTS idx_ai_discussions_agent_id
-      ON ai_discussions (agent_id);
-
-    CREATE INDEX IF NOT EXISTS idx_insights_user_created
-      ON insights (user_id, created_at);
-
     CREATE INDEX IF NOT EXISTS idx_admin_users_email_ci
       ON admin_users (lower(email));
 
     CREATE INDEX IF NOT EXISTS idx_personas_user_id
       ON personas (user_id);
   `);
+
+  // --- Remove old AI/council tables if they exist (idempotent cleanup) ---
+  await pool.query(`DROP TABLE IF EXISTS council_messages CASCADE;`);
+  await pool.query(`DROP TABLE IF EXISTS council_cases CASCADE;`);
+  await pool.query(`DROP TABLE IF EXISTS council_pages CASCADE;`);
+  await pool.query(`DROP TABLE IF EXISTS council_sessions CASCADE;`);
+  await pool.query(`DROP TABLE IF EXISTS ai_discussions CASCADE;`);
+  await pool.query(`DROP TABLE IF EXISTS insights CASCADE;`);
+
+  // --- Circle Community tables ---
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS circles (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      name text NOT NULL,
+      slug text NOT NULL UNIQUE,
+      category text NOT NULL,
+      description text DEFAULT '',
+      member_count integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circles_slug ON circles(slug);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circles_category ON circles(category);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS circle_members (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      circle_id uuid NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role text NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'admin', 'moderator')),
+      joined_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE(circle_id, user_id)
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_members_circle_id ON circle_members(circle_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_members_user_id ON circle_members(user_id);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS circle_channels (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      circle_id uuid NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+      name text NOT NULL,
+      slug text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE(circle_id, slug)
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_channels_circle_id ON circle_channels(circle_id);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS circle_messages (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      circle_id uuid NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+      channel_id uuid NOT NULL REFERENCES circle_channels(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      message_text text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_messages_circle_id ON circle_messages(circle_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_messages_channel_id ON circle_messages(channel_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_messages_created_at ON circle_messages(created_at DESC);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS circle_updates (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      circle_id uuid NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+      title text NOT NULL,
+      content text NOT NULL,
+      created_by uuid NOT NULL REFERENCES users(id),
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_updates_circle_id ON circle_updates(circle_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_updates_created_at ON circle_updates(created_at DESC);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS circle_bans (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      circle_id uuid NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      banned_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE(circle_id, user_id)
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_bans_circle_id ON circle_bans(circle_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_circle_bans_user_id ON circle_bans(user_id);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type text NOT NULL CHECK (type IN ('circle_update', 'admin_announcement', 'mention', 'circle_invite')),
+      circle_id uuid REFERENCES circles(id) ON DELETE CASCADE,
+      title text NOT NULL,
+      content text NOT NULL,
+      is_read boolean NOT NULL DEFAULT false,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created_at ON notifications(user_id, created_at DESC);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_is_read ON notifications(user_id, is_read, created_at DESC);`);
+
+  // --- Remove duplicate circles (keep one per slug: highest member_count, then lowest id); preserve memberships ---
+  await pool.query(`
+    DO $$
+    DECLARE
+      dup RECORD;
+      keeper_id uuid;
+    BEGIN
+      FOR dup IN
+        SELECT c.id AS dup_id, c.slug
+        FROM circles c
+        WHERE c.id <> (
+          SELECT c2.id FROM circles c2 WHERE c2.slug = c.slug
+          ORDER BY c2.member_count DESC, c2.id ASC LIMIT 1
+        )
+      LOOP
+        SELECT c2.id INTO keeper_id FROM circles c2 WHERE c2.slug = dup.slug
+        ORDER BY c2.member_count DESC, c2.id ASC LIMIT 1;
+        IF keeper_id IS NOT NULL THEN
+          INSERT INTO circle_members (circle_id, user_id, role)
+          SELECT keeper_id, user_id, role FROM circle_members WHERE circle_id = dup.dup_id
+          ON CONFLICT (circle_id, user_id) DO NOTHING;
+          DELETE FROM circle_members WHERE circle_id = dup.dup_id;
+          DELETE FROM circle_channels WHERE circle_id = dup.dup_id;
+          DELETE FROM circle_messages WHERE circle_id = dup.dup_id;
+          DELETE FROM circle_updates WHERE circle_id = dup.dup_id;
+          DELETE FROM circle_bans WHERE circle_id = dup.dup_id;
+          DELETE FROM circles WHERE id = dup.dup_id;
+        END IF;
+      END LOOP;
+    END $$;
+  `);
+  await pool.query(`
+    UPDATE circles SET member_count = (
+      SELECT COUNT(*)::int FROM circle_members WHERE circle_members.circle_id = circles.id
+    );
+  `);
+  try {
+    await pool.query(`ALTER TABLE circles ADD CONSTRAINT unique_circle_slug UNIQUE (slug);`);
+  } catch (e) {
+    if (e.code !== "42P07" && e.code !== "42710") throw e;
+  }
 }
 
 async function seedData() {
@@ -230,8 +350,8 @@ async function seedData() {
   const userEmail = "founder@circle.local";
   const userRes = await pool.query(
     `
-      INSERT INTO users (email, name)
-      VALUES ($1, $2)
+      INSERT INTO users (email, name, session_version)
+      VALUES ($1, $2, 1)
       ON CONFLICT (email) DO UPDATE
       SET name = EXCLUDED.name
       RETURNING id;
@@ -308,27 +428,13 @@ async function seedData() {
   );
   const sessionId = sessionRes.rows[0].id;
 
-  // Seed an example insight
-  await pool.query(
-    `
-      INSERT INTO insights (user_id, title, summary)
-      VALUES ($1, $2, $3)
-      ON CONFLICT DO NOTHING;
-    `,
-    [
-      userId,
-      "Welcome to Circle",
-      "This is a sample insight generated during database seeding. Use it as a template for storing council outcomes.",
-    ]
-  );
-
   // Seed admin user (login + admin_users): admin@thecircleplatform.org / fRMEiN7L
   const adminEmail = "admin@thecircleplatform.org";
   const adminPasswordHash = await bcrypt.hash("fRMEiN7L", 10);
   await pool.query(
     `
-      INSERT INTO users (email, name, password_hash)
-      VALUES ($1, $2, $3)
+      INSERT INTO users (email, name, password_hash, session_version)
+      VALUES ($1, $2, $3, 1)
       ON CONFLICT (email) DO UPDATE
       SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash
       RETURNING id;
@@ -367,7 +473,7 @@ async function seedData() {
       sessionId,
       userId,
       "Circle Founder",
-      "Seed message: share your startup or product idea here and let the AI council respond.",
+      "Welcome to Circle.",
     ]
   );
 
@@ -409,6 +515,216 @@ async function seedData() {
   );
 }
 
+const DEFAULT_CHANNELS = [
+  { name: "General", slug: "general" },
+  { name: "Photos", slug: "photos" },
+  { name: "News", slug: "news" },
+  { name: "Fan Talk", slug: "fan-talk" },
+];
+
+const CIRCLES_BY_CATEGORY = {
+  Music: [
+    { name: "BTS", description: "BTS and ARMY community" },
+    { name: "Blackpink", description: "Blackpink and BLINKs" },
+    { name: "Taylor Swift", description: "Swifties community" },
+    { name: "K-Pop", description: "Korean pop music fans" },
+    { name: "Hip-Hop", description: "Hip-hop and rap" },
+    { name: "Rock", description: "Rock music fans" },
+    { name: "Jazz", description: "Jazz music lovers" },
+    { name: "Classical", description: "Classical music" },
+    { name: "Pop", description: "Pop music worldwide" },
+    { name: "Indie", description: "Indie and alternative" },
+    { name: "Metal", description: "Metal music community" },
+    { name: "R&B", description: "R&B and soul" },
+    { name: "Country", description: "Country music fans" },
+    { name: "EDM", description: "Electronic dance music" },
+    { name: "Reggae", description: "Reggae and dancehall" },
+    { name: "Latin Music", description: "Latin music and reggaeton" },
+    { name: "Punk", description: "Punk rock community" },
+  ],
+  Sports: [
+    { name: "Football", description: "Football and soccer fans" },
+    { name: "Ronaldo", description: "Cristiano Ronaldo fans" },
+    { name: "Messi", description: "Lionel Messi fans" },
+    { name: "Basketball", description: "Basketball community" },
+    { name: "Tennis", description: "Tennis fans" },
+    { name: "NBA", description: "NBA discussion" },
+    { name: "NFL", description: "American football" },
+    { name: "Cricket", description: "Cricket fans" },
+    { name: "F1", description: "Formula 1 and motorsport" },
+    { name: "Golf", description: "Golf community" },
+    { name: "Boxing", description: "Boxing fans" },
+    { name: "UFC", description: "UFC and MMA" },
+    { name: "Olympics", description: "Olympic sports" },
+    { name: "Baseball", description: "Baseball fans" },
+    { name: "Rugby", description: "Rugby union and league" },
+    { name: "Cycling", description: "Cycling and Tour de France" },
+    { name: "Swimming", description: "Swimming and aquatics" },
+  ],
+  Countries: [
+    { name: "China", description: "China and Chinese culture" },
+    { name: "Japan", description: "Japan and Japanese culture" },
+    { name: "Korea", description: "Korea and Korean culture" },
+    { name: "USA", description: "United States community" },
+    { name: "UK", description: "United Kingdom community" },
+    { name: "India", description: "India and Indian culture" },
+    { name: "Brazil", description: "Brazil and Brazilian culture" },
+    { name: "France", description: "France and French culture" },
+    { name: "Germany", description: "Germany and German culture" },
+    { name: "Canada", description: "Canada community" },
+    { name: "Australia", description: "Australia community" },
+    { name: "Italy", description: "Italy and Italian culture" },
+    { name: "Spain", description: "Spain and Spanish culture" },
+    { name: "Mexico", description: "Mexico and Mexican culture" },
+    { name: "Russia", description: "Russia community" },
+    { name: "Indonesia", description: "Indonesia community" },
+    { name: "Nigeria", description: "Nigeria community" },
+    { name: "Egypt", description: "Egypt and Egyptian culture" },
+    { name: "Thailand", description: "Thailand community" },
+    { name: "Argentina", description: "Argentina community" },
+  ],
+  Learning: [
+    { name: "Programming", description: "Coding and software development" },
+    { name: "Startups", description: "Startups and entrepreneurship" },
+    { name: "Languages", description: "Language learning" },
+    { name: "Science", description: "Science and research" },
+    { name: "History", description: "History and archaeology" },
+    { name: "Math", description: "Mathematics" },
+    { name: "Philosophy", description: "Philosophy and ethics" },
+    { name: "Psychology", description: "Psychology and mental health" },
+    { name: "Business", description: "Business and management" },
+    { name: "Marketing", description: "Marketing and growth" },
+    { name: "Design", description: "Design and UX" },
+    { name: "Writing", description: "Writing and storytelling" },
+    { name: "Data Science", description: "Data science and analytics" },
+    { name: "AI & ML", description: "Artificial intelligence and machine learning" },
+    { name: "Finance", description: "Finance and investing" },
+    { name: "Law", description: "Law and legal discussion" },
+    { name: "Engineering", description: "Engineering disciplines" },
+  ],
+  Entertainment: [
+    { name: "Anime", description: "Anime and Japanese animation" },
+    { name: "Movies", description: "Movies and cinema" },
+    { name: "TV Shows", description: "TV series and streaming" },
+    { name: "Gaming", description: "Video games and esports" },
+    { name: "Marvel", description: "Marvel Cinematic Universe" },
+    { name: "DC", description: "DC Comics and films" },
+    { name: "Netflix", description: "Netflix shows and discussion" },
+    { name: "Music Festivals", description: "Festivals and live events" },
+    { name: "Stand-up Comedy", description: "Comedy and stand-up" },
+    { name: "Podcasts", description: "Podcasts and audio" },
+    { name: "Books", description: "Books and reading" },
+    { name: "Manga", description: "Manga and comics" },
+    { name: "Cosplay", description: "Cosplay and conventions" },
+    { name: "K-Drama", description: "Korean dramas" },
+    { name: "Sci-Fi", description: "Science fiction" },
+    { name: "Fantasy", description: "Fantasy books and media" },
+  ],
+  Lifestyle: [
+    { name: "Fitness", description: "Fitness and workout" },
+    { name: "Travel", description: "Travel and adventure" },
+    { name: "Cooking", description: "Cooking and recipes" },
+    { name: "Photography", description: "Photography and cameras" },
+    { name: "Fashion", description: "Fashion and style" },
+    { name: "Minimalism", description: "Minimalist lifestyle" },
+    { name: "Sustainability", description: "Eco-friendly living" },
+    { name: "Meditation", description: "Meditation and mindfulness" },
+    { name: "Self-Care", description: "Self-care and wellness" },
+    { name: "Pets", description: "Pets and animal lovers" },
+    { name: "Gardening", description: "Gardening and plants" },
+    { name: "DIY", description: "DIY and crafts" },
+    { name: "Home Decor", description: "Home decor and interior design" },
+    { name: "Running", description: "Running and marathons" },
+    { name: "Nutrition", description: "Nutrition and diet" },
+    { name: "Parenting", description: "Parenting and family" },
+    { name: "Tech Lifestyle", description: "Tech and gadgets in daily life" },
+  ],
+};
+
+function slugify(name) {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[&]/g, "and")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+async function fetchCircleImageUrlForCircle(name, category) {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!apiKey) return null;
+  const topic = (name || category || "community").trim();
+  let queryText = `${topic} community illustration square`;
+  if (/anime/i.test(topic)) queryText = "anime illustration community avatar square";
+  else if (/programming|coding|developer|engineer/i.test(topic))
+    queryText = "programming coding workspace illustration square";
+  else if (/startup|founder|business|founders/i.test(topic))
+    queryText = "startup founders business illustration square";
+  else if (/bts|k-pop|kpop/i.test(topic))
+    queryText = "kpop concert aesthetic illustration square";
+  else if (/game|gaming|esports|controller/i.test(topic))
+    queryText = "gaming controller neon illustration square";
+
+  try {
+    const url = new URL("https://api.pexels.com/v1/search");
+    url.searchParams.set("query", queryText);
+    url.searchParams.set("per_page", "1");
+    url.searchParams.set("orientation", "square");
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: apiKey },
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    const first = data?.photos?.[0];
+    const src =
+      first?.src?.large2x || first?.src?.large || first?.src?.medium || null;
+    return src || null;
+  } catch {
+    return null;
+  }
+}
+
+async function seedCircles() {
+  let totalCircles = 0;
+  for (const [category, circles] of Object.entries(CIRCLES_BY_CATEGORY)) {
+    for (const { name, description } of circles) {
+      const slug = slugify(name);
+      const circleImageUrl = await fetchCircleImageUrlForCircle(name, category);
+      await pool.query(
+        `
+          INSERT INTO circles (name, slug, category, description, circle_image_url, member_count)
+          VALUES ($1, $2, $3, $4, $5, 0)
+          ON CONFLICT (slug) DO UPDATE SET
+            name = EXCLUDED.name,
+            description = EXCLUDED.description,
+            category = EXCLUDED.category,
+            circle_image_url = COALESCE(EXCLUDED.circle_image_url, circles.circle_image_url),
+            updated_at = now();
+        `,
+        [name, slug, category, description || "", circleImageUrl]
+      );
+      const circleRes = await pool.query(
+        "SELECT id FROM circles WHERE slug = $1",
+        [slug]
+      );
+      const circleId = circleRes.rows[0]?.id;
+      if (!circleId) continue;
+      for (const ch of DEFAULT_CHANNELS) {
+        await pool.query(
+          `
+            INSERT INTO circle_channels (circle_id, name, slug)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (circle_id, slug) DO NOTHING;
+          `,
+          [circleId, ch.name, ch.slug]
+        );
+      }
+      totalCircles += 1;
+    }
+  }
+  return totalCircles;
+}
+
 async function main() {
   try {
     console.log("Running migrations...");
@@ -418,6 +734,10 @@ async function main() {
     console.log("Seeding data...");
     await seedData();
     console.log("Seed complete.");
+
+    console.log("Seeding circles and default channels...");
+    const circleCount = await seedCircles();
+    console.log(`Circles seeded: ${circleCount}.`);
   } catch (err) {
     console.error("Seed failed:", err);
     process.exitCode = 1;

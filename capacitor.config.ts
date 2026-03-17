@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.thecircleplatform.app',
+  appId: 'org.circle.app',
   appName: 'Circle',
   webDir: 'out',
   server: {
@@ -22,6 +22,9 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: true,
   },
+  // When android/ and ios/ are moved to mobile/android and mobile/ios, add:
+  // android: { path: "mobile/android", allowMixedContent: true },
+  // ios: { path: "mobile/ios" },
 };
 
 export default config;

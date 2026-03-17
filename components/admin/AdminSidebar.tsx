@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AdminSession } from "@/lib/admin";
+import type { AdminSession } from "@/services/admin";
 
 const navItems = [
   { href: "/admin", label: "Overview" },
@@ -28,7 +28,7 @@ const SidebarContent = ({ onNavClick }: { onNavClick?: () => void }) => {
         </div>
         <h1 className="mt-3 text-lg font-semibold text-white">Dashboard</h1>
         <p className="mt-1 text-xs text-white/45">
-          Manage agents, users, and AI discussions.
+          Manage agents and users.
         </p>
       </div>
       <nav className="space-y-1 rounded-3xl border border-white/12 bg-black/40 p-2 shadow-soft backdrop-blur-2xl">

@@ -333,9 +333,114 @@ function ActivityModal({
   );
 }
 
+type UserSessionItem = {
+  id: string;
+  deviceName: string;
+  ipAddress?: string;
+  createdAt: string;
+  lastActive: string;
+  revoked: boolean;
+};
+
+type UserSessionsModalProps = {
+  open: boolean;
+  onClose: () => void;
+  user: UserRow | null;
+  sessions: UserSessionItem[];
+  loading: boolean;
+  onRevoke: (sessionId: string) => Promise<void>;
+};
+
+function UserSessionsModal({
+  open,
+  onClose,
+  user,
+  sessions,
+  loading,
+  onRevoke,
+}: UserSessionsModalProps) {
+  const [revokingId, setRevokingId] = React.useState<string | null>(null);
+
+  if (!open) return null;
+
+  const handleRevoke = async (sessionId: string) => {
+    setRevokingId(sessionId);
+    try {
+      await onRevoke(sessionId);
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <GlassPanel className="relative max-h-[80vh] w-full max-w-lg overflow-hidden p-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-lg p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <h3 className="text-lg font-semibold text-white">Active Sessions</h3>
+        <p className="mt-1 text-sm text-white/60">
+          {user?.email} • {user?.name ?? "—"}
+        </p>
+        <div className="mt-4 max-h-[300px] overflow-y-auto">
+          {loading ? (
+            <p className="py-8 text-center text-sm text-white/50">Loading…</p>
+          ) : sessions.length === 0 ? (
+            <p className="py-8 text-center text-sm text-white/50">
+              No session records. User may have only signed in via OAuth or before session tracking was enabled.
+            </p>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-white/60">
+                  <th className="py-2">Device</th>
+                  <th className="py-2">IP</th>
+                  <th className="py-2">Last active</th>
+                  <th className="w-20 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((s) => (
+                  <tr key={s.id} className="border-t border-white/8">
+                    <td className="py-2 text-white/80">{s.deviceName}</td>
+                    <td className="py-2 font-mono text-white/60">{s.ipAddress ?? "—"}</td>
+                    <td className="py-2 text-white/55">
+                      {new Date(s.lastActive).toLocaleString()}
+                    </td>
+                    <td className="py-2">
+                      {s.revoked ? (
+                        <span className="text-white/40">Revoked</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-rose-400 hover:text-rose-300 disabled:opacity-50"
+                          disabled={revokingId !== null}
+                          onClick={() => handleRevoke(s.id)}
+                        >
+                          {revokingId === s.id ? "…" : "Revoke"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </GlassPanel>
+    </div>
+  );
+}
+
 export {
   EditUserModal,
   ConfirmModal,
   IpHistoryModal,
   ActivityModal,
+  UserSessionsModal,
 };

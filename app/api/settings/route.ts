@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { query } from "@/lib/db";
-import { configErrorResponse } from "@/lib/configError";
+import { query } from "@/database/db";
+import { configErrorResponse } from "@/config/configError";
 
 const settingsSchema = z.object({
   profile: z

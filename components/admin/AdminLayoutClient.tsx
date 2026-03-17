@@ -6,15 +6,20 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AdminSession } from "@/lib/admin";
+import { performLogout } from "@/lib/logout";
+import type { AdminSession } from "@/services/admin";
 
 const navItems = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/agents", label: "Agents" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/support", label: "Support" },
+  { href: "/admin/support/password-recovery", label: "Password Recovery" },
   { href: "/admin/discussions", label: "Discussions" },
   { href: "/admin/admins", label: "Admins" },
+  { href: "/admin/aco-codes", label: "Access Codes" },
+  { href: "/admin/security/login-attempts", label: "Login Attempts" },
+  { href: "/admin/security/suspicious-activity", label: "Suspicious Activity" },
 ];
 
 export function AdminLayoutClient({
@@ -32,8 +37,7 @@ export function AdminLayoutClient({
   }, [pathname]);
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/login?from=/admin";
+    await performLogout();
   }
 
   const navLinks = (
@@ -112,7 +116,7 @@ export function AdminLayoutClient({
             </div>
             <h1 className="mt-3 text-lg font-semibold text-white">Dashboard</h1>
             <p className="mt-1 text-xs text-white/45">
-              Manage agents, users, and AI discussions.
+              Manage agents and users.
             </p>
           </div>
           {navLinks}
@@ -159,7 +163,7 @@ export function AdminLayoutClient({
                     Dashboard
                   </h1>
                   <p className="mt-1 text-xs text-white/45">
-                    Manage agents, users, and AI discussions.
+                    Manage agents and users.
                   </p>
                 </div>
                 {navLinks}

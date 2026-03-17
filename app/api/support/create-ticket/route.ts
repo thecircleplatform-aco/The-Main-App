@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { query } from "@/lib/db";
-import { getSession } from "@/lib/auth";
-import { configErrorResponse } from "@/lib/configError";
+import { query } from "@/database/db";
+import { getSession } from "@/services/auth";
+import { configErrorResponse } from "@/config/configError";
 
 const bodySchema = z.object({
   message: z.string().min(1).max(2000),

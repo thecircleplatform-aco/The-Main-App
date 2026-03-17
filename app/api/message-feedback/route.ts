@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
-import { query } from "@/lib/db";
+import { getSession } from "@/services/auth";
+import { query } from "@/database/db";
 
 const bodySchema = z.object({
   messageId: z.string().min(1),

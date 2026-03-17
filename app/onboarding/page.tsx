@@ -4,7 +4,6 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PersonaSetupForm } from "@/components/onboarding/PersonaSetupForm";
-import { GalaxyBackground } from "@/components/onboarding/GalaxyBackground";
 import { fadeInUp } from "@/lib/animations";
 
 export default function OnboardingPage() {
@@ -27,8 +26,6 @@ export default function OnboardingPage() {
   }, [router]);
 
   return (
-    <>
-      <GalaxyBackground />
       <div className="relative min-h-dvh px-4 pb-20 pt-14 md:px-8">
         <div className="mx-auto max-w-lg">
           <motion.div
@@ -38,10 +35,10 @@ export default function OnboardingPage() {
             className="flex flex-col items-center gap-6"
           >
             <div className="text-center">
-              <h1 className="text-2xl font-semibold text-white">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                 Personalize your Circle
               </h1>
-              <p className="mt-1 text-sm text-white/60">
+              <p className="mt-1 text-sm text-gray-600 dark:text-white/60">
                 Answer a few questions so your AI assistant can support you
                 better.
               </p>
@@ -50,6 +47,5 @@ export default function OnboardingPage() {
           </motion.div>
         </div>
       </div>
-    </>
   );
 }

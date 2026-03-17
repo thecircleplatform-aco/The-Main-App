@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
-import { configErrorResponse } from "@/lib/configError";
+import { query } from "@/database/db";
+import { configErrorResponse } from "@/config/configError";
 
 async function getDemoUserId() {
   const res = await query<{ id: string }>(
