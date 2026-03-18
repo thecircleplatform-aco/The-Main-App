@@ -19,7 +19,7 @@ function getBarColor(percentage: number): string {
   if (percentage <= 20) return "bg-red-500";
   if (percentage <= 40) return "bg-orange-500";
   if (percentage <= 60) return "bg-amber-400";
-  if (percentage <= 80) return "bg-blue-500";
+  if (percentage <= 80) return "bg-violet-500";
   return "bg-emerald-500";
 }
 
@@ -27,7 +27,7 @@ function getLabelColor(percentage: number): string {
   if (percentage <= 20) return "text-red-500 dark:text-red-400";
   if (percentage <= 40) return "text-orange-500 dark:text-orange-400";
   if (percentage <= 60) return "text-amber-600 dark:text-amber-400";
-  if (percentage <= 80) return "text-blue-600 dark:text-blue-400";
+  if (percentage <= 80) return "text-violet-600 dark:text-violet-400";
   return "text-emerald-600 dark:text-emerald-400";
 }
 

@@ -66,7 +66,7 @@ export function CircleMemberCard({
           isAdmin
             ? "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
             : isModerator
-            ? "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200"
+            ? "bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200"
             : "bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white/70"
         )}
       >

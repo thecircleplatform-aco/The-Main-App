@@ -220,6 +220,10 @@ async function runMigrations() {
       updated_at timestamptz NOT NULL DEFAULT now()
     );
   `);
+  await pool.query(`
+    ALTER TABLE circles
+    ADD COLUMN IF NOT EXISTS circle_image_url text;
+  `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_circles_slug ON circles(slug);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_circles_category ON circles(category);`);
 

@@ -31,7 +31,7 @@ const fadeInUp = {
   visible: { opacity: 1, y: 0 },
 };
 
-const hoverGlow = "transition hover:shadow-glow hover:border-cyan-400/60";
+const hoverGlow = "transition hover:shadow-glow hover:border-violet-400/40";
 
 export default function Home() {
   const router = useRouter();
@@ -169,7 +169,7 @@ export default function Home() {
           "text-slate-900 dark:text-slate-100",
           resolved === "dark"
             ? "circle-chat-bg"
-            : "bg-gradient-to-b from-slate-50 via-sky-50/70 to-indigo-50"
+            : "bg-gradient-to-b from-slate-50 via-violet-50/60 to-slate-50"
         )}
         style={{
           paddingTop: "env(safe-area-inset-top)",
@@ -178,7 +178,7 @@ export default function Home() {
           paddingRight: "env(safe-area-inset-right)",
         }}
       >
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-500/10 via-transparent to-indigo-500/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-violet-500/10 via-transparent to-violet-500/15" />
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-4 md:gap-6 md:py-6">
           <div className="text-xs font-semibold tracking-wide text-slate-500 dark:text-white/60">
@@ -186,9 +186,9 @@ export default function Home() {
           </div>
 
           {/* Top navigation (screen header) */}
-          <header className="sticky top-0 z-20 flex items-center justify-between gap-3 rounded-2xl border border-slate-200/60 bg-gradient-to-r from-slate-50/90 via-sky-50/80 to-slate-50/90 px-4 py-2.5 backdrop-blur-xl shadow-soft dark:border-white/10 dark:bg-black/40 dark:bg-none">
+          <header className="sticky top-0 z-20 flex items-center justify-between gap-3 rounded-2xl border border-slate-200/60 bg-gradient-to-r from-slate-50/90 via-violet-50/70 to-slate-50/90 px-4 py-2.5 backdrop-blur-xl shadow-soft dark:border-white/10 dark:bg-black/40 dark:bg-none">
             <div className="flex items-center gap-2 md:gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-sky-500 to-violet-500 shadow-brand">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-violet-600 to-violet-500 shadow-brand">
                 <MessageCircle className="h-4 w-4 text-white" />
               </div>
               <div>
@@ -233,7 +233,7 @@ export default function Home() {
             >
               <div className="mb-1 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/15 text-sky-500 dark:bg-sky-500/20 dark:text-sky-300">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300">
                     <Sparkles className="h-3.5 w-3.5" />
                   </span>
                   <div>
@@ -266,7 +266,7 @@ export default function Home() {
                     )}
                   >
                     <div className="flex-1 space-y-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-300/80">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-300/85">
                         {item.circleName}
                       </p>
                       <p className="line-clamp-2 text-[12px] text-slate-800 dark:text-slate-100">
@@ -302,7 +302,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => router.push("/circles")}
-                    className="text-[11px] text-sky-300 hover:text-sky-200"
+                    className="text-[11px] text-violet-400 hover:text-violet-300"
                   >
                     View all
                   </button>
@@ -340,7 +340,7 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
                 className={cn(
-                  "rounded-2xl border border-cyan-400/40 bg-cyan-50 p-3.5 backdrop-blur-xl shadow-soft dark:border-cyan-400/25 dark:bg-cyan-500/5",
+                  "rounded-2xl border border-violet-400/25 bg-violet-50/60 p-3.5 backdrop-blur-xl shadow-soft dark:border-violet-400/20 dark:bg-violet-500/5",
                   "shadow-brand-bubble"
                 )}
               >
@@ -348,7 +348,7 @@ export default function Home() {
                   <h3 className="text-xs font-semibold tracking-wide text-slate-900 dark:text-slate-100">
                     Trending circles
                   </h3>
-                  <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-200">
+                  <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-700 dark:bg-violet-500/20 dark:text-violet-200">
                     Active now
                   </span>
                 </div>
@@ -425,7 +425,7 @@ export default function Home() {
                           {circle.members.toLocaleString()} members
                         </p>
                       </div>
-                      <span className="text-[10px] text-sky-600 dark:text-sky-300">
+                      <span className="text-[10px] text-violet-600 dark:text-violet-300">
                         {circle.activityLabel}
                       </span>
                     </motion.button>
@@ -442,7 +442,7 @@ export default function Home() {
             aria-label="Open circles"
             className={cn(
               "fixed bottom-6 right-6 z-30 inline-flex h-12 w-12 items-center justify-center rounded-full",
-              "bg-gradient-to-tr from-sky-500 to-violet-500 text-white shadow-brand hover:shadow-glow active:scale-95"
+              "bg-gradient-to-tr from-violet-600 to-violet-500 text-white shadow-brand hover:shadow-glow active:scale-95"
             )}
           >
             <Plus className="h-5 w-5" />

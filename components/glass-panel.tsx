@@ -26,7 +26,7 @@ export function GlassCard({ className, ...props }: GlassProps) {
   return (
     <div
       className={cn(
-        "relative rounded-2xl border border-cyan-200/60 bg-white/90 shadow-soft backdrop-blur-xl dark:border-white/12 dark:bg-white/4",
+        "relative rounded-2xl border border-violet-200/60 bg-white/90 shadow-soft backdrop-blur-xl dark:border-white/12 dark:bg-white/4",
         className
       )}
       {...props}

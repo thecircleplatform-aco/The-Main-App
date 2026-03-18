@@ -7,6 +7,8 @@ import { InteractiveBackground } from "./InteractiveBackground";
  * Renders the interactive background with no floating icons on auth pages
  * (login, register, forgot-password, reset-password) so the ACO logo and
  * other decorative icons do not appear behind the auth panel.
+ *
+ * Also hides the grid on /circles and /circles/[slug] pages as requested.
  */
 export function AuthAwareBackground() {
   const pathname = usePathname();
@@ -15,5 +17,13 @@ export function AuthAwareBackground() {
     pathname === "/register" ||
     pathname?.startsWith("/forgot-password") ||
     pathname?.startsWith("/reset-password");
-  return <InteractiveBackground maxIcons={isAuthPage ? 0 : undefined} />;
+
+  const isCirclesPage = pathname === "/circles" || pathname?.startsWith("/circles/");
+
+  return (
+    <InteractiveBackground
+      maxIcons={isAuthPage || isCirclesPage ? 0 : undefined}
+      hideGrid={isCirclesPage}
+    />
+  );
 }

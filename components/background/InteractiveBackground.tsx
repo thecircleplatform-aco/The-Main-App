@@ -7,9 +7,10 @@ import { stepPhysics, type PointerForce } from "./physicsEngine";
 
 type InteractiveBackgroundProps = {
   maxIcons?: number;
+  hideGrid?: boolean;
 };
 
-export function InteractiveBackground({ maxIcons = 6 }: InteractiveBackgroundProps) {
+export function InteractiveBackground({ maxIcons = 6, hideGrid = false }: InteractiveBackgroundProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const frameRef = React.useRef<number>();
   const lastTimeRef = React.useRef<number | null>(null);
@@ -222,7 +223,7 @@ export function InteractiveBackground({ maxIcons = 6 }: InteractiveBackgroundPro
 
   return (
     <>
-      <div className="interactive-grid-bg" aria-hidden="true" />
+      {!hideGrid && <div className="interactive-grid-bg" aria-hidden="true" />}
       <div
         ref={containerRef}
         className="pointer-events-none fixed inset-0 overflow-hidden"
@@ -345,4 +346,3 @@ function IconVisual({ kind, size }: IconVisualProps) {
     </svg>
   );
 }
-

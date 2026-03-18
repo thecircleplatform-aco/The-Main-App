@@ -301,7 +301,7 @@ export function AdminAcoCodesManager({ canEdit }: Props) {
                           c.role === "partner"
                             ? "bg-amber-400/20 text-amber-200"
                             : c.role === "developer"
-                            ? "bg-blue-400/20 text-blue-200"
+                            ? "bg-violet-400/20 text-violet-200"
                             : c.role === "tester"
                             ? "bg-emerald-400/20 text-emerald-200"
                             : "bg-white/10 text-white/60"

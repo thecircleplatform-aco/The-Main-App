@@ -41,15 +41,24 @@ export function FooterNav() {
   return (
     <nav
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50",
-        "border-t border-white/10 bg-[#07101e]/65 backdrop-blur-xl",
-        "px-2",
-        "pb-[env(safe-area-inset-bottom)]"
+        "fixed left-0 right-0 z-50",
+        "px-3"
       )}
       aria-label="Bottom navigation"
-      style={{ height: "calc(64px + env(safe-area-inset-bottom))" }}
+      style={{
+        bottom: "calc(12px + env(safe-area-inset-bottom))",
+      }}
     >
-      <div className="mx-auto grid h-16 w-full max-w-6xl grid-cols-5 items-center">
+      <div
+        className={cn(
+          "mx-auto grid h-14 w-full max-w-6xl grid-cols-5 items-center",
+          "rounded-full border border-violet-200/70 bg-white/80 backdrop-blur-xl",
+          "shadow-[0_14px_45px_rgba(15,23,42,0.18)]",
+          "dark:border-white/12 dark:bg-[#0b071a]/70 dark:shadow-[0_14px_45px_rgba(0,0,0,0.45)]",
+          "ring-1 ring-violet-200/50 dark:ring-white/10",
+          "px-1.5"
+        )}
+      >
         {NAV.map((item) => {
           const isActive = item.matches
             ? item.matches(pathname)
@@ -67,23 +76,28 @@ export function FooterNav() {
                   base,
                   "relative",
                   "mx-auto w-[72px] rounded-2xl",
-                  "border border-white/10 bg-white/5",
+                  "border border-violet-200/70 bg-violet-500/10",
+                  "dark:border-white/10 dark:bg-white/5",
                   isActive
                     ? "shadow-glow"
-                    : "hover:bg-white/10 active:bg-white/15"
+                    : "hover:bg-violet-500/15 active:bg-violet-500/20 dark:hover:bg-white/10 dark:active:bg-white/15"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
                 <item.Icon
                   className={cn(
-                    "h-5 w-5",
-                    isActive ? "text-white" : "text-white/80"
+                    "h-[18px] w-[18px]",
+                    isActive
+                      ? "text-violet-950 dark:text-white"
+                      : "text-violet-800/80 dark:text-white/80"
                   )}
                 />
                 <span
                   className={cn(
-                    "text-[11px] font-medium",
-                    isActive ? "text-white" : "text-white/70"
+                    "text-[10px] font-medium",
+                    isActive
+                      ? "text-violet-950 dark:text-white"
+                      : "text-violet-800/70 dark:text-white/70"
                   )}
                 >
                   {item.label}
@@ -99,32 +113,42 @@ export function FooterNav() {
               className={cn(
                 base,
                 "rounded-xl",
-                isActive ? "text-white" : "text-white/70 hover:text-white/90"
+                isActive
+                  ? "text-violet-950 dark:text-white"
+                  : "text-violet-800/70 hover:text-violet-950 dark:text-white/70 dark:hover:text-white/90"
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              {item.badge && (
-                <span
+              <span className="relative inline-flex">
+                <item.Icon
                   className={cn(
-                    "absolute -top-1.5 right-3 rounded-full px-2 py-0.5",
-                    "bg-sky-400/35 text-[10px] font-semibold text-white",
-                    "border border-white/10 backdrop-blur-xl"
+                    "h-[18px] w-[18px]",
+                    isActive
+                      ? "text-violet-950 dark:text-white"
+                      : "text-violet-800/70 dark:text-white/75"
                   )}
-                  aria-hidden="true"
-                >
-                  {item.badge}
-                </span>
-              )}
-              <item.Icon
-                className={cn(
-                  "h-5 w-5",
-                  isActive ? "text-white" : "text-white/75"
+                />
+                {item.badge && (
+                  <span
+                    className={cn(
+                      "absolute -top-2.5 -right-2.5 min-w-[14px] h-[14px] rounded-full px-1",
+                      "grid place-items-center text-[9px] font-semibold leading-none",
+                      "bg-violet-500/15 text-violet-900",
+                      "border border-violet-200/70 backdrop-blur-xl",
+                      "dark:bg-violet-500/20 dark:text-white dark:border-white/10"
+                    )}
+                    aria-hidden="true"
+                  >
+                    {item.badge}
+                  </span>
                 )}
-              />
+              </span>
               <span
                 className={cn(
-                  "text-[11px] font-medium",
-                  isActive ? "text-white" : "text-white/65"
+                  "text-[10px] font-medium",
+                  isActive
+                    ? "text-violet-950 dark:text-white"
+                    : "text-violet-800/65 dark:text-white/65"
                 )}
               >
                 {item.label}

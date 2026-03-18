@@ -12,20 +12,24 @@
 @layer base {
   :root {
     color-scheme: light dark;
-    --color-bg-page: #f8f7ff;
-    --color-text-primary: #1e1b4b;
-    --color-text-muted: #4c4a6a;
-    --color-border: rgba(124, 58, 237, 0.12);
-    --color-bg-card: rgba(255, 255, 255, 0.95);
-    --color-accent: 124 58 237;
+    /* Light mode - clean, soft, high-contrast */
+    --color-bg-page: #f5f7fb; /* soft light background */
+    --color-surface: #ffffff; /* primary surface / cards */
+    --color-text-primary: #020617; /* near-black text */
+    --color-text-muted: #4b5563; /* muted grey text */
+    --color-border: rgba(15, 23, 42, 0.07); /* subtle neutral border */
+    --color-bg-card: #ffffff; /* solid card background for clarity */
+    --color-accent: 124 58 237; /* purple accent for actions/highlights */
   }
 
   .dark {
-    --color-bg-page: #000000;
-    --color-text-primary: #ffffff;
-    --color-text-muted: rgba(255, 255, 255, 0.6);
-    --color-border: rgba(255, 255, 255, 0.08);
-    --color-bg-card: rgba(255, 255, 255, 0.05);
+    /* Dark mode - near-black with elevated surfaces */
+    --color-bg-page: #0b0f19; /* near-black background */
+    --color-surface: #111827; /* slightly lighter surfaces */
+    --color-text-primary: #f9fafb; /* bright, readable text */
+    --color-text-muted: rgba(249, 250, 251, 0.65); /* softer supporting text */
+    --color-border: rgba(148, 163, 184, 0.35); /* cool grey border for separation */
+    --color-bg-card: #111827; /* solid surface for cards/panels */
   }
 
   html,
@@ -40,7 +44,7 @@
   .bg-hero {
     background:
       radial-gradient(1200px 500px at 20% 10%, rgba(124, 58, 237, 0.35), transparent 55%),
-      radial-gradient(900px 500px at 80% 30%, rgba(34, 211, 238, 0.22), transparent 60%),
+      radial-gradient(900px 500px at 80% 30%, rgba(139, 92, 246, 0.18), transparent 60%),
       radial-gradient(800px 600px at 50% 95%, rgba(16, 185, 129, 0.18), transparent 60%),
       radial-gradient(900px 700px at 50% 55%, rgba(255, 255, 255, 0.05), transparent 65%),
       linear-gradient(to bottom, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.96));
@@ -57,15 +61,15 @@
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.08),
       0 18px 60px rgba(0, 0, 0, 0.45),
-      0 0 35px rgba(124, 58, 237, 0.18),
-      0 0 25px rgba(34, 211, 238, 0.12);
+      0 0 35px rgba(124, 58, 237, 0.20),
+      0 0 25px rgba(167, 139, 250, 0.12);
   }
 
   /* Brand shadow: #6c4dff, #3fa9ff, #34d399 - prominent for light theme */
   .shadow-brand {
     box-shadow:
       0 12px 40px -8px rgba(108, 77, 255, 0.4),
-      0 6px 20px -4px rgba(63, 169, 255, 0.25),
+      0 6px 20px -4px rgba(167, 139, 250, 0.22),
       0 4px 12px -2px rgba(52, 211, 153, 0.2),
       0 0 0 1px rgba(108, 77, 255, 0.15);
   }
@@ -74,7 +78,7 @@
     box-shadow:
       0 10px 32px -6px rgba(108, 77, 255, 0.35),
       0 6px 16px -2px rgba(52, 211, 153, 0.2),
-      0 0 0 1px rgba(63, 169, 255, 0.12);
+      0 0 0 1px rgba(167, 139, 250, 0.12);
   }
 
   .chat-bubble-in {
@@ -94,9 +98,9 @@
         rgba(7, 12, 22, 0.4) 70%,
         rgba(7, 12, 22, 0.9) 100%
       ),
-      /* blue-tinted grid */
-      linear-gradient(rgba(120, 170, 255, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(120, 170, 255, 0.08) 1px, transparent 1px),
+      /* violet-tinted grid */
+      linear-gradient(rgba(167, 139, 250, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(167, 139, 250, 0.08) 1px, transparent 1px),
       /* dark vertical depth gradient */
       linear-gradient(180deg, #0f172a 0%, #0b1220 40%, #070c16 100%);
     background-size: auto, 50px 50px, 50px 50px, auto;
@@ -104,6 +108,15 @@
     background-attachment: fixed;
     backdrop-filter: blur(18px) saturate(125%);
     -webkit-backdrop-filter: blur(18px) saturate(125%);
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE/Edge legacy */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
   }
 }
 
@@ -113,19 +126,19 @@
   100% {
     box-shadow:
       0 14px 44px -8px rgba(108, 77, 255, 0.5),
-      0 6px 20px -4px rgba(63, 169, 255, 0.2),
+      0 6px 20px -4px rgba(167, 139, 250, 0.18),
       0 4px 12px -2px rgba(52, 211, 153, 0.15);
   }
   33% {
     box-shadow:
       0 12px 40px -8px rgba(108, 77, 255, 0.25),
-      0 8px 28px -4px rgba(63, 169, 255, 0.45),
+      0 8px 28px -4px rgba(167, 139, 250, 0.30),
       0 4px 12px -2px rgba(52, 211, 153, 0.2);
   }
   66% {
     box-shadow:
       0 12px 40px -8px rgba(108, 77, 255, 0.2),
-      0 6px 20px -4px rgba(63, 169, 255, 0.25),
+      0 6px 20px -4px rgba(167, 139, 250, 0.20),
       0 8px 24px -2px rgba(52, 211, 153, 0.45);
   }
 }
@@ -133,7 +146,7 @@
 .message-input-bar {
   box-shadow:
     0 12px 40px -8px rgba(108, 77, 255, 0.4),
-    0 6px 20px -4px rgba(63, 169, 255, 0.25),
+    0 6px 20px -4px rgba(167, 139, 250, 0.20),
     0 4px 12px -2px rgba(52, 211, 153, 0.2);
 }
 
@@ -190,7 +203,7 @@
 }
 
 .council-report-article .council-report-table-wrap {
-  @apply overflow-x-auto rounded-xl border border-cyan-200/70 dark:border-white/10;
+  @apply overflow-x-auto rounded-xl border border-violet-200/70 dark:border-white/10;
 }
 
 .council-report-article .council-report-table {

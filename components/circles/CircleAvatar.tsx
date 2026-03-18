@@ -23,9 +23,9 @@ function gradientForName(name: string): string {
     hash = (hash * 31 + name.charCodeAt(i)) | 0;
   }
   const palette = [
-    "from-violet-500 to-indigo-500",
+    "from-violet-500 to-violet-600",
     "from-emerald-500 to-teal-500",
-    "from-sky-500 to-blue-600",
+    "from-violet-500 to-fuchsia-500",
     "from-rose-500 to-fuchsia-500",
     "from-amber-500 to-orange-500",
   ];

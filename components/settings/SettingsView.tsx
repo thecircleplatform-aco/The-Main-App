@@ -313,7 +313,7 @@ export function SettingsView() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100/80 px-3 py-1 text-[11px] font-medium text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-700 dark:text-white/70">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
             User settings
           </div>
           <h1 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">
@@ -828,7 +828,7 @@ export function SettingsView() {
             </div>
             <Link
               href="/changelog"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 transition-colors hover:text-violet-700 dark:text-cyan-400 dark:hover:text-cyan-300"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 transition-colors hover:text-violet-700 dark:text-violet-300 dark:hover:text-violet-200"
             >
               View what&apos;s new
               <span className="text-[10px]">→</span>

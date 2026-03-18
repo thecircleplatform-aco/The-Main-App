@@ -41,8 +41,11 @@ export function CircleChatWindow({
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom on new messages
   React.useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
   }, [messages.length]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -54,82 +57,64 @@ export function CircleChatWindow({
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       containerRef.current.scrollBy({ top: -lineScroll, behavior: "smooth" });
-    } else if (event.key === "PageDown") {
-      event.preventDefault();
-      containerRef.current.scrollBy({
-        top: containerRef.current.clientHeight,
-        behavior: "smooth",
-      });
-    } else if (event.key === "PageUp") {
-      event.preventDefault();
-      containerRef.current.scrollBy({
-        top: -containerRef.current.clientHeight,
-        behavior: "smooth",
-      });
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (event.key === "End") {
-      event.preventDefault();
-      containerRef.current.scrollTo({
-        top: containerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
     }
   };
 
   return (
     <div
       className={cn(
-        fullPage
-          ? "relative flex flex-col w-full h-full bg-gray-50/95 dark:bg-black circle-chat-bg"
-          : "relative flex flex-col h-full min-h-0 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-black/30 circle-chat-bg",
+        "flex flex-col w-full h-full bg-transparent",
+        !fullPage && "rounded-3xl border border-white/5 shadow-2xl overflow-hidden",
         className
       )}
     >
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 pb-28 flex flex-col gap-3 focus:outline-none"
+        className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2 focus:outline-none no-scrollbar"
         tabIndex={0}
         onKeyDown={handleKeyDown}
-        aria-label="Circle chat messages"
-        role="region"
       >
         {hasOlder && onLoadOlder && (
-          <div className="flex justify-center py-2">
+          <div className="flex justify-center py-4">
             <button
               type="button"
               onClick={onLoadOlder}
               disabled={loadOlderLoading}
-              className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline disabled:opacity-50"
+              className="px-4 py-1.5 rounded-full bg-white/5 text-[11px] font-bold text-violet-300 hover:bg-white/10 transition-colors disabled:opacity-50"
             >
-              {loadOlderLoading ? "Loading…" : "Load older messages"}
+              {loadOlderLoading ? "Loading history..." : "Load older messages"}
             </button>
           </div>
         )}
+
         {messages.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-sm text-gray-500 dark:text-white/50">
-            {emptyMessage}
+          <div className="flex-1 flex items-center justify-center p-10 text-center">
+             <p className="text-[13px] text-white/30 font-medium max-w-[200px] leading-relaxed">
+               {emptyMessage}
+             </p>
           </div>
         ) : (
-          messages.map((msg) => (
-            <CircleMessage
-              key={msg.id}
-              id={msg.id}
-              username={msg.username}
-              message_text={msg.message_text}
-              created_at={msg.created_at}
-              isOwn={currentUserId != null && msg.user_id === currentUserId}
-            />
-          ))
+          <div className="flex flex-col gap-1.5">
+            {messages.map((msg, idx) => (
+              <CircleMessage
+                key={msg.id}
+                id={msg.id}
+                username={msg.username}
+                message_text={msg.message_text}
+                created_at={msg.created_at}
+                isOwn={currentUserId != null && msg.user_id === currentUserId}
+              />
+            ))}
+          </div>
         )}
-        <div ref={bottomRef} aria-hidden />
+        <div ref={bottomRef} aria-hidden className="h-4 shrink-0" />
       </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-4 pt-2">
+
+      <div className="px-4 pb-6 pt-2">
         <CircleMessageInput
           onSend={onSend}
           disabled={sendLoading}
-          className="pointer-events-auto mx-auto w-full max-w-xl"
+          className="shrink-0 bg-white/5 border-white/10 hover:border-white/20 focus-within:border-violet-400/40 transition-all rounded-2xl"
         />
       </div>
     </div>

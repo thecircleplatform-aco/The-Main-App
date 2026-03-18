@@ -122,7 +122,7 @@ export default function ChangelogPage() {
             >
               <GlassPanel className="overflow-visible p-6 sm:p-8">
                 <div className="absolute -right-2 -top-2 h-24 w-24 rounded-full bg-violet-500/10 blur-2xl" />
-                <div className="absolute -bottom-2 -left-2 h-20 w-20 rounded-full bg-cyan-500/10 blur-xl" />
+                <div className="absolute -bottom-2 -left-2 h-20 w-20 rounded-full bg-violet-500/10 blur-xl" />
 
                 <div className="relative flex flex-wrap items-baseline gap-2">
                   <span className=" rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-sm font-semibold text-violet-300">
@@ -130,7 +130,7 @@ export default function ChangelogPage() {
                   </span>
                   <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
                     <span className="inline-flex items-center gap-1">
-                      <Cpu className="h-3 w-3 text-cyan-400" />
+                      <Cpu className="h-3 w-3 text-violet-400" />
                       {release.aiVersion}
                     </span>
                   </span>

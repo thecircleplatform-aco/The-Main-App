@@ -47,10 +47,14 @@ export async function GET() {
     const res = await query<CircleRow & { circle_image_url?: string | null }>(
       sql,
       [userId]
-    ).catch((err: Error & { message?: string }) => {
+    ).catch((err: Error & { message?: string; code?: string }) => {
       const message = err?.message ?? "";
-      if (message.includes('column "circle_image_url" does not exist')) {
-        // Fallback for older databases without the new column.
+      const code = err?.code ?? "";
+      if (
+        code === "42703" ||
+        message.includes("circle_image_url") ||
+        message.includes('column "circle_image_url" does not exist')
+      ) {
         return query<CircleRow>(
           `
           SELECT c.id,

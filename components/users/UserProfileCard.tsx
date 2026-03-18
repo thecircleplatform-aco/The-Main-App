@@ -31,7 +31,7 @@ export function UserProfileCard({
 
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/5">
-      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-white flex items-center justify-center text-lg font-semibold overflow-hidden">
+      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-violet-600 text-white flex items-center justify-center text-lg font-semibold overflow-hidden">
         {avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

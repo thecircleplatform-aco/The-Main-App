@@ -127,7 +127,7 @@ export function CircleAdminPanel({
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="flex items-center gap-3">
             {/* simple inline avatar preview */}
-            <div className="h-16 w-16 rounded-full overflow-hidden bg-gradient-to-br from-violet-500 to-indigo-500 text-white flex items-center justify-center text-sm font-semibold">
+            <div className="h-16 w-16 rounded-full overflow-hidden bg-gradient-to-br from-violet-500 to-violet-600 text-white flex items-center justify-center text-sm font-semibold">
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
