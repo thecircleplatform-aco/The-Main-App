@@ -102,8 +102,18 @@ export default function CircleChatPage({
     }
   };
 
-  if (loading) return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black"><div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-400/80 border-t-transparent" /></div>;
-  if (loadError || !circle) return <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-white"><p className="mb-4">{loadError}</p><Link href="/circles" className="text-violet-300 hover:text-violet-200">Back to Explore</Link></div>;
+  // Render instantly: no blocking loading screen.
+  // If we fail to load (or circle never resolves), show the error screen.
+  if (!loading && (loadError || !circle)) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-white">
+        <p className="mb-4">{loadError}</p>
+        <Link href="/circles" className="text-violet-300 hover:text-violet-200">
+          Back to Explore
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-transparent flex flex-col overflow-hidden">
@@ -114,9 +124,16 @@ export default function CircleChatPage({
         </button>
 
         <div className="flex-1 flex items-center gap-3 overflow-hidden">
-           <CircleAvatar name={circle.name} imageUrl={circle.circle_image_url ?? null} size="sm" className="h-10 w-10 rounded-full ring-1 ring-white/10" />
+           <CircleAvatar
+             name={circle?.name ?? "Circle"}
+             imageUrl={circle?.circle_image_url ?? null}
+             size="sm"
+             className="h-10 w-10 rounded-full ring-1 ring-white/10"
+           />
            <div className="min-w-0">
-              <h1 className="text-[16px] font-bold text-white truncate leading-tight">{circle.name}</h1>
+              <h1 className="text-[16px] font-bold text-white truncate leading-tight">
+                {circle?.name ?? "Circle"}
+              </h1>
               <p className="text-[12px] text-white/40 truncate">#{activeChannel}</p>
            </div>
         </div>
@@ -146,7 +163,7 @@ export default function CircleChatPage({
             <div className="absolute inset-0 z-50 flex animate-in fade-in duration-200">
                <div className="h-full w-[300px] bg-[#0A0A0A] shadow-2xl animate-in slide-in-from-left duration-300">
                   <CircleChannelsSidebar
-                    channels={circle.channelList || []}
+                    channels={circle?.channelList ?? []}
                     activeChannel={activeChannel}
                     onSelectChannel={(ch) => { setActiveChannel(ch); setNavOpen(false); }}
                   />

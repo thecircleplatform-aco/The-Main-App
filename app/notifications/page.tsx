@@ -23,7 +23,7 @@ type ListResponse = {
 export default function NotificationsPage() {
   const [items, setItems] = React.useState<NotificationItem[]>([]);
   const [cursor, setCursor] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [filterUnread, setFilterUnread] = React.useState(false);
@@ -155,11 +155,7 @@ export default function NotificationsPage() {
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
-          </div>
-        ) : error ? (
+        {error ? (
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         ) : items.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-white/60">
@@ -194,7 +190,7 @@ export default function NotificationsPage() {
           </ul>
         )}
 
-        {cursor && !loading && (
+        {cursor && (
           <div className="mt-4 flex justify-center">
             <button
               type="button"
@@ -202,7 +198,7 @@ export default function NotificationsPage() {
               disabled={loadingMore}
               className="rounded-full bg-gray-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
             >
-              {loadingMore ? "Loading…" : "Load more"}
+              Load more
             </button>
           </div>
         )}

@@ -104,11 +104,7 @@ export default function UserProfilePage({
           </h1>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
-          </div>
-        ) : error ? (
+        {error ? (
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         ) : !profile ? (
           <p className="text-sm text-gray-500 dark:text-white/60">

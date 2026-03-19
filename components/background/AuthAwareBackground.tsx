@@ -19,11 +19,12 @@ export function AuthAwareBackground() {
     pathname?.startsWith("/reset-password");
 
   const isCirclesPage = pathname === "/circles" || pathname?.startsWith("/circles/");
+  const isDropsPage = pathname === "/drops";
 
   return (
     <InteractiveBackground
-      maxIcons={isAuthPage || isCirclesPage ? 0 : undefined}
-      hideGrid={isCirclesPage}
+      maxIcons={isAuthPage || isCirclesPage || isDropsPage ? 0 : undefined}
+      hideGrid={isCirclesPage || isDropsPage}
     />
   );
 }

@@ -77,11 +77,11 @@ export default function ChangelogPage() {
           className="mb-8"
         >
           <Link
-            href="/settings"
+            href="/profile"
             className="inline-flex items-center gap-2 text-xs font-medium text-violet-600 transition-colors hover:text-violet-700 dark:text-white/60 dark:hover:text-white"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Settings
+            Back to Profile
           </Link>
         </motion.div>
 

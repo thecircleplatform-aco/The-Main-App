@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -37,6 +38,27 @@ const NAV: NavItem[] = [
 
 export function FooterNav() {
   const pathname = usePathname() || "/";
+  const [dropsVideoMode, setDropsVideoMode] = React.useState(false);
+
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const ev = e as CustomEvent<{ tab: string }>;
+      if (pathname === "/drops" && ev.detail?.tab === "videos") {
+        setDropsVideoMode(true);
+      } else {
+        setDropsVideoMode(false);
+      }
+    };
+    window.addEventListener("drops-feed-tab-changed", handler as EventListener);
+    return () =>
+      window.removeEventListener("drops-feed-tab-changed", handler as EventListener);
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (pathname !== "/drops") setDropsVideoMode(false);
+  }, [pathname]);
+
+  if (dropsVideoMode) return null;
 
   return (
     <nav

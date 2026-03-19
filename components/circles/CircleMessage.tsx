@@ -4,6 +4,24 @@ import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+const VOICE_PREFIX = "__voice__:";
+const STICKER_PREFIX = "__sticker__:";
+
+const STICKERS: Record<string, { emoji: string; label: string }> = {
+  sparkles: { emoji: "✨", label: "Sparkles" },
+  fire: { emoji: "🔥", label: "Fire" },
+  heart: { emoji: "❤️", label: "Heart" },
+  laugh: { emoji: "😂", label: "Laugh" },
+  wow: { emoji: "😮", label: "Wow" },
+  cool: { emoji: "😎", label: "Cool" },
+  clap: { emoji: "👏", label: "Clap" },
+  party: { emoji: "🥳", label: "Party" },
+  "100": { emoji: "💯", label: "100" },
+  star: { emoji: "⭐", label: "Star" },
+  idea: { emoji: "💡", label: "Idea" },
+  rocket: { emoji: "🚀", label: "Rocket" },
+};
+
 export type CircleMessageProps = {
   id: string;
   username: string;
@@ -43,6 +61,56 @@ export function CircleMessage({
 }: CircleMessageProps) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [menuPos, setMenuPos] = React.useState<{ x: number; y: number } | null>(null);
+
+  const renderBody = () => {
+    if (typeof message_text !== "string") return null;
+
+    if (message_text.startsWith(VOICE_PREFIX)) {
+      const url = message_text.slice(VOICE_PREFIX.length).trim();
+      if (!url) return null;
+      return (
+        <div className="pt-1">
+          <audio
+            controls
+            preload="metadata"
+            className={cn(
+              "w-[240px] max-w-full",
+              isOwn
+                ? "[&::-webkit-media-controls-panel]:bg-white/20 [&::-webkit-media-controls-panel]:text-white"
+                : "[&::-webkit-media-controls-panel]:bg-white/80"
+            )}
+            src={url}
+          />
+        </div>
+      );
+    }
+
+    if (message_text.startsWith(STICKER_PREFIX)) {
+      const id = message_text.slice(STICKER_PREFIX.length).trim();
+      const sticker = STICKERS[id];
+      if (!sticker) return <span className="text-sm">{message_text}</span>;
+      return (
+        <div
+          className="py-1 text-[44px] leading-none select-none"
+          aria-label={sticker.label}
+          title={sticker.label}
+        >
+          {sticker.emoji}
+        </div>
+      );
+    }
+
+    return (
+      <p
+        className={cn(
+          "text-sm whitespace-pre-wrap break-words",
+          isOwn ? "text-white" : "text-slate-50"
+        )}
+      >
+        {message_text}
+      </p>
+    );
+  };
 
   const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -132,14 +200,7 @@ export function CircleMessage({
             {formatTime(created_at)}
           </span>
         </div>
-        <p
-          className={cn(
-            "text-sm whitespace-pre-wrap break-words",
-            isOwn ? "text-white" : "text-slate-50"
-          )}
-        >
-          {message_text}
-        </p>
+        {renderBody()}
 
         {menuOpen && menuPos && (
           <div

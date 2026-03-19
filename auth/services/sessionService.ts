@@ -7,10 +7,10 @@
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { createSessionToken, verifySessionToken } from "@/auth/services/tokenService";
+import { query } from "@/database/db";
 import {
   createSessionRecord,
   updateLastActive,
-  getSessionById,
   getSessionVersionForUser,
 } from "@/auth/services/sessionRecordService";
 import type { CreateSessionInput } from "@/auth/types/authTypes";
@@ -55,25 +55,31 @@ export async function createSessionWithRecord(
 }
 
 /** Read and verify the session cookie; check revoked and session_version (returns null so callers return 401), update last_active. */
-async function getSessionFromCookie(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
+async function getSessionFromCookieToken(token: string): Promise<SessionPayload | null> {
   const payload = await verifySessionToken(token);
   if (!payload) return null;
-  const currentVersion = await getSessionVersionForUser(payload.sub);
-  if ((payload.session_version ?? 1) !== currentVersion) {
-    return null; // token invalidated by session_version bump → 401
-  }
   // Cookie-based tokens must include session_id and have a valid, non-revoked session row
   if (!payload.sessionId) {
     return null; // token must have session_id for auth
   }
-  const session = await getSessionById(payload.sessionId);
-  if (!session || session.revoked === true) {
-    return null; // session missing or revoked → 401 Unauthorized
-  }
-  await updateLastActive(payload.sessionId).catch(() => {});
+
+  // Minimize per-request DB roundtrips: verify session + session_version in one query.
+  const authRes = await query<{ revoked: boolean; session_version: string | null }>(
+    `SELECT us.revoked, u.session_version::text AS session_version
+     FROM user_sessions us
+     JOIN users u ON u.id = us.user_id
+     WHERE us.id = $1`,
+    [payload.sessionId]
+  );
+  const authRow = authRes.rows[0];
+  if (!authRow || authRow.revoked === true) return null;
+
+  const currentVersion =
+    authRow.session_version != null ? parseInt(authRow.session_version, 10) : 1;
+  if ((payload.session_version ?? 1) !== currentVersion) return null;
+
+  // Don't block the response on last_active updates.
+  void updateLastActive(payload.sessionId).catch(() => {});
   return payload;
 }
 
@@ -82,8 +88,19 @@ async function getSessionFromCookie(): Promise<SessionPayload | null> {
  * Returns the same SessionPayload shape for both.
  */
 export async function getSession(): Promise<SessionPayload | null> {
-  const fromCookie = await getSessionFromCookie();
-  if (fromCookie) return fromCookie;
+  const cookieStore = await cookies();
+
+  const circleToken = cookieStore.get(COOKIE_NAME)?.value;
+  if (circleToken) {
+    const fromCookie = await getSessionFromCookieToken(circleToken);
+    if (fromCookie) return fromCookie;
+  }
+
+  // Avoid the expensive NextAuth machinery when we clearly have no NextAuth cookies.
+  const hasNextAuthCookie =
+    cookieStore.has("next-auth.session-token") ||
+    cookieStore.has("__Secure-next-auth.session-token");
+  if (!hasNextAuthCookie) return null;
 
   const nextAuthSession = await getServerSession(nextAuthOptions);
   const userId = nextAuthSession?.user && "id" in nextAuthSession.user && nextAuthSession.user.id;

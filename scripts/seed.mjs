@@ -347,6 +347,53 @@ async function runMigrations() {
   } catch (e) {
     if (e.code !== "42P07" && e.code !== "42710") throw e;
   }
+
+  // --- Drops (posts and videos in circles) ---
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS drops (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      circle_id uuid NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type text NOT NULL CHECK (type IN ('post', 'video')),
+      text text,
+      image_url text,
+      video_url text,
+      caption text,
+      duration_seconds integer,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_drops_circle_id ON drops(circle_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_drops_user_id ON drops(user_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_drops_created_at ON drops(created_at DESC);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS drop_likes (
+      drop_id uuid NOT NULL REFERENCES drops(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (drop_id, user_id)
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_drop_likes_drop_id ON drop_likes(drop_id);`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS drop_comments (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      drop_id uuid NOT NULL REFERENCES drops(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      text text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(`
+    ALTER TABLE drop_comments
+      ADD COLUMN IF NOT EXISTS parent_comment_id uuid REFERENCES drop_comments(id) ON DELETE CASCADE;
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_drop_comments_drop_id ON drop_comments(drop_id);`);
+  await pool.query(
+    `CREATE INDEX IF NOT EXISTS idx_drop_comments_parent_comment_id ON drop_comments(parent_comment_id);`
+  );
 }
 
 async function seedData() {
@@ -729,6 +776,202 @@ async function seedCircles() {
   return totalCircles;
 }
 
+async function seedDrops() {
+  // Ensure AI Builders circle exists
+  await pool.query(
+    `
+    INSERT INTO circles (name, slug, category, description, member_count)
+    VALUES ('AI Builders', 'ai-builders', 'Learning', 'Community for AI builders and practitioners', 0)
+    ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description
+    RETURNING id;
+    `
+  );
+  const circleRes = await pool.query(
+    "SELECT id FROM circles WHERE slug = 'ai-builders'"
+  );
+  const circleId = circleRes.rows[0]?.id;
+  if (!circleId) return 0;
+
+  // Ensure default channels for AI Builders
+  for (const ch of DEFAULT_CHANNELS) {
+    await pool.query(
+      `
+      INSERT INTO circle_channels (circle_id, name, slug)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (circle_id, slug) DO NOTHING;
+      `,
+      [circleId, ch.name, ch.slug]
+    );
+  }
+
+  // Demo users for drops (no password, display only)
+  const demoUsers = [
+    { email: "alex@circle.local", name: "Alex Kim" },
+    { email: "riley@circle.local", name: "Riley Stone" },
+    { email: "taylor@circle.local", name: "Taylor" },
+    { email: "morgan@circle.local", name: "Morgan" },
+    { email: "jordan@circle.local", name: "Jordan" },
+  ];
+  const userIds = {};
+  for (const u of demoUsers) {
+    const r = await pool.query(
+      `
+      INSERT INTO users (email, name, session_version)
+      VALUES ($1, $2, 1)
+      ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id;
+      `,
+      [u.email, u.name]
+    );
+    userIds[u.name] = r.rows[0].id;
+  }
+  const alexId = userIds["Alex Kim"];
+  const rileyId = userIds["Riley Stone"];
+  const taylorId = userIds["Taylor"];
+  const morganId = userIds["Morgan"];
+  const jordanId = userIds["Jordan"];
+
+  // Add them as members of AI Builders
+  for (const id of [alexId, rileyId, taylorId, morganId, jordanId]) {
+    await pool.query(
+      `
+      INSERT INTO circle_members (circle_id, user_id, role)
+      VALUES ($1, $2, 'member')
+      ON CONFLICT (circle_id, user_id) DO NOTHING;
+      `,
+      [circleId, id]
+    );
+  }
+  await pool.query(
+    `UPDATE circles SET member_count = (SELECT COUNT(*)::int FROM circle_members WHERE circle_id = $1) WHERE id = $1`,
+    [circleId]
+  );
+
+  const post1Image =
+    "https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg?auto=compress&cs=tinysrgb&w=800";
+  const videoSample =
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+
+  // Seed 2 posts
+  const post1Res = await pool.query(
+    `
+    INSERT INTO drops (circle_id, user_id, type, text, image_url)
+    VALUES ($1, $2, 'post', $3, $4)
+    RETURNING id, created_at;
+    `,
+    [
+      circleId,
+      alexId,
+      "Just shipped a new prompt evaluation dashboard. Curious what other people use to keep evals from getting stale.",
+      post1Image,
+    ]
+  );
+  const post1Id = post1Res.rows[0].id;
+
+  await pool.query(
+    `
+    INSERT INTO drops (circle_id, user_id, type, text)
+    VALUES ($1, $2, 'post', $3)
+    RETURNING id;
+    `,
+    [
+      circleId,
+      rileyId,
+      "Trying a softer card layout for our community hub. Thoughts on hierarchy and spacing?",
+    ]
+  );
+
+  // Seed 2 videos
+  const video1Res = await pool.query(
+    `
+    INSERT INTO drops (circle_id, user_id, type, video_url, caption, duration_seconds)
+    VALUES ($1, $2, 'video', $3, $4, $5)
+    RETURNING id;
+    `,
+    [
+      circleId,
+      taylorId,
+      videoSample,
+      "60-second walkthrough of our new onboarding flow.",
+      45,
+    ]
+  );
+  const video1Id = video1Res.rows[0].id;
+
+  await pool.query(
+    `
+    INSERT INTO drops (circle_id, user_id, type, video_url, caption, duration_seconds)
+    VALUES ($1, $2, 'video', $3, $4, $5)
+    RETURNING id;
+    `,
+    [
+      circleId,
+      morganId,
+      videoSample,
+      "Quick clip from today's standup – sharing how we prioritize what to ship.",
+      32,
+    ]
+  );
+
+  // Like counts: post1 -> 12 likes (add 12 random user likes we use alex+riley+jordan + founder multiple times or add more users; simpler: add 12 likes from founder and the 4 demo users by repeating - we need 12 distinct user_ids. So add more demo users or use same user - DB has UNIQUE(drop_id, user_id) so one like per user. So we add likes from alex, riley, taylor, morgan, jordan = 5. Add 7 more fake users for likes or leave as 5. I'll add 7 more seed users for "likes" to get to 12.)
+  const likeUserEmails = [
+    "like1@circle.local",
+    "like2@circle.local",
+    "like3@circle.local",
+    "like4@circle.local",
+    "like5@circle.local",
+    "like6@circle.local",
+    "like7@circle.local",
+  ];
+  for (let i = 0; i < likeUserEmails.length; i++) {
+    const r = await pool.query(
+      `INSERT INTO users (email, name, session_version) VALUES ($1, $2, 1)
+       ON CONFLICT (email) DO NOTHING RETURNING id`,
+      [likeUserEmails[i], `Like User ${i + 1}`]
+    );
+    if (r.rows[0]?.id) {
+      await pool.query(
+        `INSERT INTO drop_likes (drop_id, user_id) VALUES ($1, $2) ON CONFLICT (drop_id, user_id) DO NOTHING`,
+        [post1Id, r.rows[0].id]
+      );
+    }
+  }
+  for (const uid of [alexId, rileyId, taylorId, morganId, jordanId]) {
+    await pool.query(
+      `INSERT INTO drop_likes (drop_id, user_id) VALUES ($1, $2) ON CONFLICT (drop_id, user_id) DO NOTHING`,
+      [post1Id, uid]
+    );
+  }
+  // Video1: 23 likes
+  for (let i = 8; i <= 25; i++) {
+    const r = await pool.query(
+      `INSERT INTO users (email, name, session_version) VALUES ($1, $2, 1)
+       ON CONFLICT (email) DO NOTHING RETURNING id`,
+      [`like${i}@circle.local`, `Like User ${i}`]
+    );
+    if (r.rows[0]?.id) {
+      await pool.query(
+        `INSERT INTO drop_likes (drop_id, user_id) VALUES ($1, $2) ON CONFLICT (drop_id, user_id) DO NOTHING`,
+        [video1Id, r.rows[0].id]
+      );
+    }
+  }
+  for (const uid of [alexId, rileyId, taylorId, morganId, jordanId]) {
+    await pool.query(
+      `INSERT INTO drop_likes (drop_id, user_id) VALUES ($1, $2) ON CONFLICT (drop_id, user_id) DO NOTHING`,
+      [video1Id, uid]
+    );
+  }
+
+  // One comment on first post (Jordan)
+  await pool.query(
+    `INSERT INTO drop_comments (drop_id, user_id, text) VALUES ($1, $2, $3)`,
+    [post1Id, jordanId, "Looks slick – are you open-sourcing it?"]
+  );
+
+  return 4; // 2 posts + 2 videos
+}
+
 async function main() {
   try {
     console.log("Running migrations...");
@@ -742,6 +985,10 @@ async function main() {
     console.log("Seeding circles and default channels...");
     const circleCount = await seedCircles();
     console.log(`Circles seeded: ${circleCount}.`);
+
+    console.log("Seeding drops (AI Builders)...");
+    const dropsCount = await seedDrops();
+    console.log(`Drops seeded: ${dropsCount}.`);
   } catch (err) {
     console.error("Seed failed:", err);
     process.exitCode = 1;

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Flame, Search, Users, ChevronRight, Plus, MessageCircle, Sparkles } from "lucide-react";
+import { Flame, Search, Users, ChevronRight, Plus, MessageCircle, Sparkles, Lock } from "lucide-react";
 import { CircleAvatar } from "@/components/circles/CircleAvatar";
 import { cn } from "@/lib/utils";
 
@@ -201,32 +201,38 @@ export default function ExploreCirclesPage() {
           </div>
         )}
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-violet-400/70 border-t-transparent" />
+        <div className="px-0">
+          {joinedCircles.length === 0 ? (
+            <div className="py-20 text-center text-violet-700/70 dark:text-white/60">
+              You have not joined any circles yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-violet-200/70 dark:divide-white/5">
+              {joinedCircles.map((c, idx) => (
+                <CircleRow
+                  key={c.id ?? c.slug ?? idx}
+                  circle={c}
+                  isJoined={true}
+                  onJoin={handleJoin}
+                  joinLoading={false}
+                />
+              ))}
+            </div>
+          )}
+          <div className="pb-20" /> {/* Spacer for footer */}
+          <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+6px)]">
+            <div className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-[11px] text-violet-700/70 dark:text-white/55">
+              <Lock className="h-3.5 w-3.5 opacity-80" />
+              <Link
+                href="/security/end-to-end-encryption"
+                className="font-semibold text-violet-700 hover:text-violet-900 underline-offset-2 hover:underline dark:text-white/80 dark:hover:text-white"
+              >
+                End‑to‑end encrypted
+              </Link>
+              <span>with ACO Ghosts Security</span>
+            </div>
           </div>
-        ) : (
-          <div className="px-0">
-            {joinedCircles.length === 0 ? (
-              <div className="py-20 text-center text-violet-700/70 dark:text-white/60">
-                You have not joined any circles yet.
-              </div>
-            ) : (
-              <div className="divide-y divide-violet-200/70 dark:divide-white/5">
-                {joinedCircles.map((c, idx) => (
-                  <CircleRow
-                    key={c.id ?? c.slug ?? idx}
-                    circle={c}
-                    isJoined={true}
-                    onJoin={handleJoin}
-                    joinLoading={false}
-                  />
-                ))}
-              </div>
-            )}
-            <div className="h-20" /> {/* Spacer for footer */}
-          </div>
-        )}
+        </div>
       </div>
 
       {exploreOpen && (

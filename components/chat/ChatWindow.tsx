@@ -283,7 +283,7 @@ export function ChatWindow() {
               <div className="flex shrink-0 flex-col gap-0.5 border-t border-white/10 px-4 py-3">
                 {mounted && me?.email ? (
                   <Link
-                    href="/settings"
+                    href="/profile"
                     onClick={() => setShowSideMenu(false)}
                     className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-gray-200 -mx-2 dark:hover:bg-white/10"
                   >
@@ -299,7 +299,7 @@ export function ChatWindow() {
                       <p className="truncate text-[11px] text-gray-600 dark:text-white/60">
                         {me.email}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-gray-500 dark:text-white/40">Tap for Settings</p>
+                      <p className="mt-0.5 text-[10px] text-gray-500 dark:text-white/40">Tap for Profile</p>
                     </div>
                   </Link>
                 ) : null}

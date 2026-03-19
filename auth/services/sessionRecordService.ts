@@ -7,6 +7,11 @@ import { query } from "@/database/db";
 import { parseDeviceName } from "@/auth/utils/userAgent";
 import { getClientIP } from "@/auth/utils/ipUtils";
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __circle_lastActiveTick: Map<string, number> | undefined;
+}
+
 export type CreateSessionRecordInput = {
   request: Request;
   userId: string;
@@ -34,6 +39,13 @@ export async function createSessionRecord(
 
 /** Update last_active for a session (call on each authenticated request). */
 export async function updateLastActive(sessionId: string): Promise<void> {
+  const now = Date.now();
+  const tick = (globalThis.__circle_lastActiveTick ??= new Map<string, number>());
+  const last = tick.get(sessionId) ?? 0;
+  // Avoid writing on every request (remote DB latency is painful in dev).
+  if (now - last < 60_000) return;
+  tick.set(sessionId, now);
+
   await query(
     `UPDATE user_sessions SET last_active = now() WHERE id = $1 AND revoked = false`,
     [sessionId]

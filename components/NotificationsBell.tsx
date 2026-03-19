@@ -24,6 +24,7 @@ export function NotificationsBell() {
   const [loading, setLoading] = React.useState(false);
   const [items, setItems] = React.useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = React.useState<number>(0);
+  const safeTop = "calc(56px + env(safe-area-inset-top) + 8px)";
 
   const loadLatest = React.useCallback(async () => {
     setLoading(true);
@@ -93,7 +94,16 @@ export function NotificationsBell() {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-72 rounded-xl border border-gray-200/80 bg-white/95 text-gray-900 shadow-lg dark:border-white/10 dark:bg-black/95 dark:text-white z-50">
+        <div
+          className={cn(
+            // Mobile: keep it inside viewport.
+            "fixed left-3 right-3 z-50 mt-0 w-auto",
+            "sm:absolute sm:left-auto sm:right-0 sm:mt-2 sm:w-72",
+            "rounded-xl border border-gray-200/80 bg-white/95 text-gray-900 shadow-lg",
+            "dark:border-white/10 dark:bg-black/95 dark:text-white"
+          )}
+          style={{ top: safeTop }}
+        >
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-white/10">
             <span className="text-xs font-semibold uppercase tracking-wide">
               Notifications
@@ -106,13 +116,9 @@ export function NotificationsBell() {
             </Link>
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {loading ? (
-              <div className="flex items-center justify-center py-6">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
-              </div>
-            ) : items.length === 0 ? (
+            {items.length === 0 ? (
               <p className="px-3 py-4 text-xs text-gray-500 dark:text-white/60">
-                You have no notifications yet.
+                {loading ? " " : "You have no notifications yet."}
               </p>
             ) : (
               <ul className="divide-y divide-gray-100 dark:divide-white/10">
